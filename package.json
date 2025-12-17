@@ -1,0 +1,23 @@
+{
+  "name": "novavote",
+  "version": "1.0.0",
+  "description": "Privacy-Preserving Blockchain-Based Electronic Voting System",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "blockchain"
+  ],
+  "scripts": {
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install && cd ../blockchain && npm install",
+    "blockchain": "cd blockchain && npm run node",
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm run blockchain\" \"npm run backend\" \"npm run frontend\"",
+    "deploy": "cd blockchain && npm run deploy",
+    "test": "cd blockchain && npm test"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  blockchain:
+    image: node:18-alpine
+    container_name: novavote-blockchain
+    working_dir: /app
+    volumes:
+      - ./blockchain:/app
+    ports:
+      - "8545:8545"
+    command: npx hardhat node --hostname 0.0.0.0
+    networks:
+      - novavote-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: novavote-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - HOST=0.0.0.0
+      - NODE_ENV=production
+      - BLOCKCHAIN_RPC_URL=http://blockchain:8545
+      - CHAIN_ID=1337
+      - CORS_ORIGIN=*
+      - SESSION_SECRET=change-this-in-production
+    depends_on:
+      - blockchain
+    networks:
+      - novavote-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: novavote-frontend
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_URL=http://localhost:3000
+      - VITE_BLOCKCHAIN_RPC_URL=http://localhost:8545
+    depends_on:
+      - backend
+    networks:
+      - novavote-network
+    restart: unless-stopped
+
+networks:
+  novavote-network:
+    driver: bridge
+
+volumes:
+  blockchain-data:

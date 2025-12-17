@@ -1,0 +1,46 @@
+node_modules/
+.env
+.env.local
+.env.production
+dist/
+build/
+*.log
+.DS_Store
+coverage/
+.vscode/
+.idea/
+
+# Blockchain
+blockchain/cache/
+blockchain/artifacts/
+blockchain/typechain-types/
+
+# Frontend
+frontend/dist/
+frontend/.vite/
+
+# Backend
+backend/dist/
+
+# Database
+*.db
+*.sqlite
+
+# ZK
+*.r1cs
+*.wasm
+*.zkey
+*.vkey
+*.sym
+witness.wtns
+proof.json
+public.json
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Deployment
+.vercel
+.netlify
+.railway
