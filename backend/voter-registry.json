@@ -1,5 +1,49 @@
 {
   "voterTrees": {
+    "1": {
+      "tree": {
+        "root": "f0a53a28d09bb2fdd68255cf760b9cac0d531d572c1b55a265b7d620fcc06ff0",
+        "tree": [
+          [
+            "61f874bbab5797e85b9b27831e3fc9f216dceff2bbb160bf5638baecb5c9337a",
+            "023648def446735f8f28d0d749081d282d800938e47417e484ab3a6a2dd7fd3b",
+            "766e4eb75c78507c162552e59cbaec104d5187dbd9154e7bc21ce31a8efde37b"
+          ],
+          [
+            "fb6b1b8e7a8b5a45a957f7802043cb8df1223e25f2020ea9f107d4402bbbd3ab",
+            "92ae1711940519ce0df8502d05a0381eba7e259276e64a65cabd881ee1e056df"
+          ],
+          [
+            "f0a53a28d09bb2fdd68255cf760b9cac0d531d572c1b55a265b7d620fcc06ff0"
+          ]
+        ],
+        "leaves": [
+          "61f874bbab5797e85b9b27831e3fc9f216dceff2bbb160bf5638baecb5c9337a",
+          "023648def446735f8f28d0d749081d282d800938e47417e484ab3a6a2dd7fd3b",
+          "766e4eb75c78507c162552e59cbaec104d5187dbd9154e7bc21ce31a8efde37b"
+        ]
+      },
+      "credentials": [
+        {
+          "credential": "76b75256209b5f0da0833b809b0b082dfc70f1e78d99b53eba2824deb6f9d3cd",
+          "secret": "f5ea2a9aafb11a2d161ba4d6899eae0eba1c298a38fc9451804dfc5ab2290624",
+          "leafHash": "61f874bbab5797e85b9b27831e3fc9f216dceff2bbb160bf5638baecb5c9337a",
+          "voterId": "V001"
+        },
+        {
+          "credential": "25f9ac16a0b7897b8a6fa640203ba2f488b4eaeed81c17686551611ca554100e",
+          "secret": "4a1ff6d90b5531ab2930b88d29f17341b5b890e20daf99431feb3b4065541808",
+          "leafHash": "023648def446735f8f28d0d749081d282d800938e47417e484ab3a6a2dd7fd3b",
+          "voterId": "V002"
+        },
+        {
+          "credential": "fd03e5a5aea9fdba7661ddcef7f65e9195eda703576d51e4a3af634a8bd109e5",
+          "secret": "6839ea806e356c9bace22a92ff6cbfb538c103998573963373d353c2afc68a6c",
+          "leafHash": "766e4eb75c78507c162552e59cbaec104d5187dbd9154e7bc21ce31a8efde37b",
+          "voterId": "V003"
+        }
+      ]
+    },
     "4": {
       "tree": {
         "root": "3f1d78f305168f9a0d66ea6f9ca47df8cb79ff5d591a9dbf23e3e6f5f122592b",
@@ -43,9 +87,100 @@
           "voterId": "VOTER_C"
         }
       ]
+    },
+    "5": {
+      "tree": {
+        "root": "aadc647b80c91fb6e572626ec6b5308853eb18c61983efffa997e2883453bdea",
+        "tree": [
+          [
+            "6e30fbdfe5108f5b5da2d4bc4850363c8142558a5eadfdbc13e2d8202b848b40",
+            "fe80dcf683064a587cbf7ccf6d47c23d0f6cd012229cac68e6aad9cb49c55440",
+            "9863072fb426f1b9ea6a138b7b61a5075eb0447db8e7fba840e8325e4330d781"
+          ],
+          [
+            "92e59fc9794ef0bc6d3568d5591c368a2ea6cd0f6d307e8ebd1310b32f317c91",
+            "3b809599b1d096e335dcbcdeb4d7ab2724e69ab2304a62f805f02660e84e14ae"
+          ],
+          [
+            "aadc647b80c91fb6e572626ec6b5308853eb18c61983efffa997e2883453bdea"
+          ]
+        ],
+        "leaves": [
+          "6e30fbdfe5108f5b5da2d4bc4850363c8142558a5eadfdbc13e2d8202b848b40",
+          "fe80dcf683064a587cbf7ccf6d47c23d0f6cd012229cac68e6aad9cb49c55440",
+          "9863072fb426f1b9ea6a138b7b61a5075eb0447db8e7fba840e8325e4330d781"
+        ]
+      },
+      "credentials": [
+        {
+          "credential": "2a17623a15e98889df44dff17c259142742a19910c3486492db208b4fa12fb5e",
+          "secret": "f795958b98090e2121ab27096a2ab4b47692c363daa84d1fd410e06d6285ab42",
+          "leafHash": "6e30fbdfe5108f5b5da2d4bc4850363c8142558a5eadfdbc13e2d8202b848b40",
+          "voterId": "ALICE"
+        },
+        {
+          "credential": "e9763b1efdd050142d32e1aaba26750969207f8132b48e9a2bc03ca4a455d915",
+          "secret": "01ab04e4881ff8c07c208c6fd0274be56acd8fab6a003d26f6f3f60b52eaafe3",
+          "leafHash": "fe80dcf683064a587cbf7ccf6d47c23d0f6cd012229cac68e6aad9cb49c55440",
+          "voterId": "BOB"
+        },
+        {
+          "credential": "e44e1b8d1601f795b98dec25c67fade93e2984636b47010088ea555c2887457a",
+          "secret": "06b688e4f548e106b7b532fab0b8c82e45bf08fd81d9677eb24cf1930e50382e",
+          "leafHash": "9863072fb426f1b9ea6a138b7b61a5075eb0447db8e7fba840e8325e4330d781",
+          "voterId": "CHARLIE"
+        }
+      ]
     }
   },
   "voterRegistry": {
+    "1": {
+      "76b75256209b5f0da0833b809b0b082dfc70f1e78d99b53eba2824deb6f9d3cd": {
+        "voterId": "V001",
+        "leafHash": "61f874bbab5797e85b9b27831e3fc9f216dceff2bbb160bf5638baecb5c9337a",
+        "leafIndex": 0,
+        "merkleProof": [
+          {
+            "hash": "023648def446735f8f28d0d749081d282d800938e47417e484ab3a6a2dd7fd3b",
+            "position": "right"
+          },
+          {
+            "hash": "92ae1711940519ce0df8502d05a0381eba7e259276e64a65cabd881ee1e056df",
+            "position": "right"
+          }
+        ]
+      },
+      "25f9ac16a0b7897b8a6fa640203ba2f488b4eaeed81c17686551611ca554100e": {
+        "voterId": "V002",
+        "leafHash": "023648def446735f8f28d0d749081d282d800938e47417e484ab3a6a2dd7fd3b",
+        "leafIndex": 1,
+        "merkleProof": [
+          {
+            "hash": "61f874bbab5797e85b9b27831e3fc9f216dceff2bbb160bf5638baecb5c9337a",
+            "position": "left"
+          },
+          {
+            "hash": "92ae1711940519ce0df8502d05a0381eba7e259276e64a65cabd881ee1e056df",
+            "position": "right"
+          }
+        ]
+      },
+      "fd03e5a5aea9fdba7661ddcef7f65e9195eda703576d51e4a3af634a8bd109e5": {
+        "voterId": "V003",
+        "leafHash": "766e4eb75c78507c162552e59cbaec104d5187dbd9154e7bc21ce31a8efde37b",
+        "leafIndex": 2,
+        "merkleProof": [
+          {
+            "hash": "766e4eb75c78507c162552e59cbaec104d5187dbd9154e7bc21ce31a8efde37b",
+            "position": "right"
+          },
+          {
+            "hash": "fb6b1b8e7a8b5a45a957f7802043cb8df1223e25f2020ea9f107d4402bbbd3ab",
+            "position": "left"
+          }
+        ]
+      }
+    },
     "4": {
       "c77b000b883ad66a2cd8c13d6cd7fa747433c32bc6a916a2fa7b9941b562cf14": {
         "voterId": "VOTER_A",
@@ -88,6 +223,53 @@
           },
           {
             "hash": "502a8ebe4a252ac461057978183fe09d4ff2d8fa9dd84775ae082ec32382d212",
+            "position": "left"
+          }
+        ]
+      }
+    },
+    "5": {
+      "2a17623a15e98889df44dff17c259142742a19910c3486492db208b4fa12fb5e": {
+        "voterId": "ALICE",
+        "leafHash": "6e30fbdfe5108f5b5da2d4bc4850363c8142558a5eadfdbc13e2d8202b848b40",
+        "leafIndex": 0,
+        "merkleProof": [
+          {
+            "hash": "fe80dcf683064a587cbf7ccf6d47c23d0f6cd012229cac68e6aad9cb49c55440",
+            "position": "right"
+          },
+          {
+            "hash": "3b809599b1d096e335dcbcdeb4d7ab2724e69ab2304a62f805f02660e84e14ae",
+            "position": "right"
+          }
+        ]
+      },
+      "e9763b1efdd050142d32e1aaba26750969207f8132b48e9a2bc03ca4a455d915": {
+        "voterId": "BOB",
+        "leafHash": "fe80dcf683064a587cbf7ccf6d47c23d0f6cd012229cac68e6aad9cb49c55440",
+        "leafIndex": 1,
+        "merkleProof": [
+          {
+            "hash": "6e30fbdfe5108f5b5da2d4bc4850363c8142558a5eadfdbc13e2d8202b848b40",
+            "position": "left"
+          },
+          {
+            "hash": "3b809599b1d096e335dcbcdeb4d7ab2724e69ab2304a62f805f02660e84e14ae",
+            "position": "right"
+          }
+        ]
+      },
+      "e44e1b8d1601f795b98dec25c67fade93e2984636b47010088ea555c2887457a": {
+        "voterId": "CHARLIE",
+        "leafHash": "9863072fb426f1b9ea6a138b7b61a5075eb0447db8e7fba840e8325e4330d781",
+        "leafIndex": 2,
+        "merkleProof": [
+          {
+            "hash": "9863072fb426f1b9ea6a138b7b61a5075eb0447db8e7fba840e8325e4330d781",
+            "position": "right"
+          },
+          {
+            "hash": "92e59fc9794ef0bc6d3568d5591c368a2ea6cd0f6d307e8ebd1310b32f317c91",
             "position": "left"
           }
         ]

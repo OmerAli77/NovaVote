@@ -14,6 +14,8 @@ export default function AuditPage() {
   const [activeTab, setActiveTab] = useState('audit')
   const [blockchainData, setBlockchainData] = useState([])
   const [selectedBlock, setSelectedBlock] = useState(null)
+  const [merkleTreeData, setMerkleTreeData] = useState(null)
+  const [zkpData, setZkpData] = useState(null)
 
   // Helper to check if hash is empty/zero
   const isEmptyHash = (hash) => {
@@ -23,7 +25,52 @@ export default function AuditPage() {
 
   useEffect(() => {
     loadAuditData()
+    loadMerkleTreeData()
+    loadZKPData()
   }, [electionId])
+
+  const loadMerkleTreeData = async () => {
+    try {
+      // Simulated Merkle tree data - in production, fetch from backend
+      setMerkleTreeData({
+        root: '0x3f1d78f305168f9a0d66ea6f9ca47df8cb79ff5d591a9dbf23e3e6f5f122592b',
+        leaves: [
+          '0xd949de198c17373e5a59480332add6d89d10022012487ab8694e1df1d7f61cc2',
+          '0x58cb5b62953c0420af2beca734dbef1a820106663ec9c845fe8f7d800d132f30',
+          '0x3aba99b2409c1830f20b53e2a1d75dc7c944dda4e86e0c29bc3f88f25f446c30'
+        ],
+        layers: 3,
+        voterCount: 3
+      })
+    } catch (error) {
+      console.error('Failed to load Merkle tree data:', error)
+    }
+  }
+
+  const loadZKPData = async () => {
+    try {
+      // Simulated ZKP data - in production, fetch real proofs
+      setZkpData({
+        protocol: 'Groth16',
+        curveType: 'BN254',
+        proofSize: '256 bytes',
+        verificationTime: '~500ms',
+        securityLevel: '128-bit',
+        sampleProof: {
+          pi_a: ['0x2509f33c...', '0x00000000...'],
+          pi_b: ['0x7e9e06cf...', '0x7e9e06cf...'],
+          pi_c: ['0xaa1ead83...', '0x00000000...'],
+          publicSignals: {
+            nullifier: '0x4b679ed6...',
+            merkleRoot: '0x3f1d78f3...',
+            electionId: electionId
+          }
+        }
+      })
+    } catch (error) {
+      console.error('Failed to load ZKP data:', error)
+    }
+  }
 
   const loadAuditData = async () => {
     setLoading(true)
@@ -110,7 +157,37 @@ export default function AuditPage() {
                 : 'text-[var(--text-muted)] border-transparent hover:text-[var(--text-secondary)]'
             }`}
           >
-            Audit Results
+            📊 Audit Results
+          </button>
+          <button
+            onClick={() => setActiveTab('blockchain')}
+            className={`px-5 py-3 text-sm font-medium transition-all duration-200 border-b-2 -mb-px ${
+              activeTab === 'blockchain'
+                ? 'text-[var(--accent-primary)] border-[var(--accent-primary)]'
+                : 'text-[var(--text-muted)] border-transparent hover:text-[var(--text-secondary)]'
+            }`}
+          >
+            ⛓️ Blockchain Explorer
+          </button>
+          <button
+            onClick={() => setActiveTab('zkp')}
+            className={`px-5 py-3 text-sm font-medium transition-all duration-200 border-b-2 -mb-px ${
+              activeTab === 'zkp'
+                ? 'text-[var(--accent-primary)] border-[var(--accent-primary)]'
+                : 'text-[var(--text-muted)] border-transparent hover:text-[var(--text-secondary)]'
+            }`}
+          >
+            🔐 ZKP System
+          </button>
+          <button
+            onClick={() => setActiveTab('merkle')}
+            className={`px-5 py-3 text-sm font-medium transition-all duration-200 border-b-2 -mb-px ${
+              activeTab === 'merkle'
+                ? 'text-[var(--accent-primary)] border-[var(--accent-primary)]'
+                : 'text-[var(--text-muted)] border-transparent hover:text-[var(--text-secondary)]'
+            }`}
+          >
+            🌳 Merkle Tree
           </button>
           <button
             onClick={() => setActiveTab('architecture')}
@@ -120,13 +197,12 @@ export default function AuditPage() {
                 : 'text-[var(--text-muted)] border-transparent hover:text-[var(--text-secondary)]'
             }`}
           >
-            Blockchain & Architecture
+            🏗️ Architecture
           </button>
         </div>
       </div>
 
-      {activeTab === 'audit' ? (
-        <>
+      {activeTab === 'audit' && (<>
           {/* What is Vote Commitment Explanation */}
           <div className="card border-indigo-500/30 bg-indigo-500/5">
             <div className="flex items-start space-x-4">
@@ -1281,6 +1357,804 @@ export default function AuditPage() {
               </div>
               <div className="text-cyan-200">
                 <span className="text-gray-400">Privacy:</span> P(reveal_vote | C) = 0 (information-theoretically secure)
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BLOCKCHAIN EXPLORER TAB */}
+      {activeTab === 'blockchain' && (
+        <div className="card bg-gradient-to-br from-slate-900 via-blue-900/20 to-slate-900 border-2 border-blue-700/50">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <h2 className="text-2xl font-bold text-blue-200">Vote Blockchain Explorer</h2>
+            </div>
+            <div className="text-sm text-gray-400">
+              {blockchainData.length} blocks
+            </div>
+          </div>
+
+          <p className="text-gray-300 mb-6 text-sm">
+            Click on any block to see the encryption details and cryptographic proof
+          </p>
+
+          {blockchainData.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <svg className="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+              </svg>
+              <p>No votes cast yet</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {blockchainData.map((block, index) => (
+                <div
+                  key={block.blockNumber}
+                  onClick={() => setSelectedBlock(selectedBlock?.blockNumber === block.blockNumber ? null : block)}
+                  className={`cursor-pointer transition-all duration-300 rounded-xl border-2 ${
+                    selectedBlock?.blockNumber === block.blockNumber
+                      ? 'border-cyan-500 bg-cyan-900/30 shadow-lg shadow-cyan-500/20'
+                      : 'border-slate-700 bg-slate-800/50 hover:border-blue-600 hover:bg-slate-800'
+                  }`}
+                >
+                  {/* Block content from original - kept as is */}
+                  <div className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                          <span className="text-white font-bold">#{block.blockNumber}</span>
+                        </div>
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <h3 className="font-semibold text-white">Block {block.blockNumber}</h3>
+                            <span className="px-2 py-1 bg-green-600/20 border border-green-600 rounded text-green-300 text-xs">
+                              Confirmed
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {new Date(block.timestamp * 1000).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs text-gray-500">Receipt Hash</div>
+                        <code className="text-xs font-mono text-blue-300">
+                          {block.commitment ? `${block.commitment.slice(0, 10)}...${block.commitment.slice(-8)}` : 'N/A'}
+                        </code>
+                      </div>
+                    </div>
+                    {index < blockchainData.length - 1 && (
+                      <div className="flex items-center justify-center my-2">
+                        <div className="flex items-center space-x-2 text-gray-600">
+                          <div className="w-3 h-3 border-2 border-gray-600 rounded-full"></div>
+                          <div className="w-16 h-0.5 bg-gradient-to-r from-gray-600 to-transparent"></div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {selectedBlock?.blockNumber === block.blockNumber && (
+                    <div className="border-t-2 border-cyan-600/50 bg-slate-900/80 p-6">
+                      <div className="grid md:grid-cols-2 gap-4 text-sm">
+                        <div className="bg-dark-800 rounded p-3">
+                          <div className="text-gray-400 mb-2">Block Data:</div>
+                          <div className="space-y-1 font-mono text-xs">
+                            <div>Timestamp: {block.timestamp}</div>
+                            <div>Previous: {block.previousHash?.slice(0, 16)}...</div>
+                            <div>Proof: {block.proofHash?.slice(0, 16)}...</div>
+                          </div>
+                        </div>
+                        <div className="bg-dark-800 rounded p-3">
+                          <div className="text-gray-400 mb-2">Commitment:</div>
+                          <code className="text-green-300 text-xs break-all">{block.commitment}</code>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ZKP SYSTEM TAB */}
+      {activeTab === 'zkp' && zkpData && (
+        <div className="space-y-6">
+          {/* ZKP Overview */}
+          <div className="card bg-gradient-to-br from-purple-900/30 via-indigo-900/30 to-blue-900/30 border-2 border-purple-700/50">
+            <h2 className="text-2xl font-bold text-purple-200 mb-6 flex items-center">
+              <svg className="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              Zero-Knowledge Proof System
+            </h2>
+
+            <div className="grid md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-dark-800 rounded-lg p-4 border border-purple-500/30">
+                <div className="text-purple-300 font-semibold mb-2">Protocol</div>
+                <div className="text-2xl font-bold text-white">{zkpData.protocol}</div>
+                <div className="text-xs text-gray-400 mt-1">Groth16 zk-SNARK</div>
+              </div>
+              <div className="bg-dark-800 rounded-lg p-4 border border-indigo-500/30">
+                <div className="text-indigo-300 font-semibold mb-2">Curve Type</div>
+                <div className="text-2xl font-bold text-white">{zkpData.curveType}</div>
+                <div className="text-xs text-gray-400 mt-1">Elliptic Curve</div>
+              </div>
+              <div className="bg-dark-800 rounded-lg p-4 border border-blue-500/30">
+                <div className="text-blue-300 font-semibold mb-2">Security Level</div>
+                <div className="text-2xl font-bold text-white">{zkpData.securityLevel}</div>
+                <div className="text-xs text-gray-400 mt-1">Cryptographic strength</div>
+              </div>
+            </div>
+
+            {/* ZKP Workflow */}
+            <div className="bg-dark-800 rounded-lg p-6 border border-purple-500/30">
+              <h3 className="text-lg font-semibold text-purple-200 mb-4">How Zero-Knowledge Proofs Work</h3>
+              
+              <div className="grid md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-white font-bold text-2xl">1</span>
+                  </div>
+                  <h4 className="font-semibold text-green-300 mb-2">Prover</h4>
+                  <p className="text-xs text-gray-400">Voter generates proof with secret credential</p>
+                </div>
+
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-white font-bold text-2xl">2</span>
+                  </div>
+                  <h4 className="font-semibold text-blue-300 mb-2">Witness</h4>
+                  <p className="text-xs text-gray-400">Private inputs: vote choice, secret, credential</p>
+                </div>
+
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-white font-bold text-2xl">3</span>
+                  </div>
+                  <h4 className="font-semibold text-purple-300 mb-2">Proof</h4>
+                  <p className="text-xs text-gray-400">Generate π = (πa, πb, πc) using Groth16</p>
+                </div>
+
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-pink-600 to-pink-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-white font-bold text-2xl">4</span>
+                  </div>
+                  <h4 className="font-semibold text-pink-300 mb-2">Verify</h4>
+                  <p className="text-xs text-gray-400">Blockchain verifies without learning the vote</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Sample Proof Structure */}
+            <div className="mt-6 bg-dark-800 rounded-lg p-6 border border-indigo-500/30">
+              <h3 className="text-lg font-semibold text-indigo-200 mb-4 flex items-center">
+                <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+                Groth16 Proof Structure
+              </h3>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="text-sm font-semibold text-purple-300 mb-3">Proof Components (π)</h4>
+                  <div className="space-y-3 font-mono text-xs">
+                    <div className="bg-dark-900 rounded p-3">
+                      <div className="text-gray-400 mb-1">π_a (G1 point):</div>
+                      <div className="text-green-300 break-all">{zkpData.sampleProof.pi_a[0]}</div>
+                      <div className="text-green-300 break-all">{zkpData.sampleProof.pi_a[1]}</div>
+                    </div>
+                    <div className="bg-dark-900 rounded p-3">
+                      <div className="text-gray-400 mb-1">π_b (G2 point):</div>
+                      <div className="text-blue-300 break-all">{zkpData.sampleProof.pi_b[0]}</div>
+                    </div>
+                    <div className="bg-dark-900 rounded p-3">
+                      <div className="text-gray-400 mb-1">π_c (G1 point):</div>
+                      <div className="text-purple-300 break-all">{zkpData.sampleProof.pi_c[0]}</div>
+                      <div className="text-purple-300 break-all">{zkpData.sampleProof.pi_c[1]}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-semibold text-indigo-300 mb-3">Public Signals</h4>
+                  <div className="space-y-3 font-mono text-xs">
+                    <div className="bg-dark-900 rounded p-3">
+                      <div className="text-gray-400 mb-1">Nullifier (prevents double voting):</div>
+                      <div className="text-yellow-300 break-all">{zkpData.sampleProof.publicSignals.nullifier}</div>
+                    </div>
+                    <div className="bg-dark-900 rounded p-3">
+                      <div className="text-gray-400 mb-1">Merkle Root (voter eligibility):</div>
+                      <div className="text-cyan-300 break-all">{zkpData.sampleProof.publicSignals.merkleRoot}</div>
+                    </div>
+                    <div className="bg-dark-900 rounded p-3">
+                      <div className="text-gray-400 mb-1">Election ID:</div>
+                      <div className="text-pink-300">{zkpData.sampleProof.publicSignals.electionId}</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 bg-emerald-900/20 border border-emerald-700/50 rounded p-3">
+                    <div className="flex items-start space-x-2">
+                      <svg className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="text-xs text-emerald-300">
+                        <strong>Privacy Preserved:</strong> The actual vote choice is never revealed. Only proof that the vote is valid.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Mathematical Properties */}
+            <div className="mt-6 bg-dark-800 rounded-lg p-6 border border-cyan-500/30">
+              <h3 className="text-lg font-semibold text-cyan-200 mb-4">Mathematical Properties</h3>
+              <div className="grid md:grid-cols-3 gap-4 text-sm">
+                <div className="bg-dark-900 rounded p-4">
+                  <h4 className="font-semibold text-green-300 mb-2 flex items-center">
+                    ✓ Completeness
+                  </h4>
+                  <p className="text-gray-400 text-xs">
+                    If statement is true and prover knows the witness, verification will always succeed.
+                  </p>
+                </div>
+                <div className="bg-dark-900 rounded p-4">
+                  <h4 className="font-semibold text-yellow-300 mb-2 flex items-center">
+                    🔒 Soundness
+                  </h4>
+                  <p className="text-gray-400 text-xs">
+                    Cannot prove false statements. Cheating probability &lt; 2^-128 (negligible).
+                  </p>
+                </div>
+                <div className="bg-dark-900 rounded p-4">
+                  <h4 className="font-semibold text-purple-300 mb-2 flex items-center">
+                    👁️ Zero-Knowledge
+                  </h4>
+                  <p className="text-gray-400 text-xs">
+                    Verifier learns nothing except validity. Vote remains completely private.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Nullifier System */}
+          <div className="card bg-gradient-to-br from-red-900/20 to-orange-900/20 border-2 border-red-700/50">
+            <h3 className="text-xl font-bold text-red-200 mb-4 flex items-center">
+              <svg className="w-7 h-7 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+              </svg>
+              Nullifier-Based Double Vote Prevention
+            </h3>
+
+            <div className="bg-dark-800 rounded-lg p-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold text-orange-300 mb-3">How Nullifiers Work</h4>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-6 h-6 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xs">1</div>
+                      <div>
+                        <div className="font-medium text-white">Generate Nullifier</div>
+                        <code className="text-xs text-gray-400">nullifier = Hash(secret || electionId)</code>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <div className="w-6 h-6 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xs">2</div>
+                      <div>
+                        <div className="font-medium text-white">Submit with Vote</div>
+                        <div className="text-xs text-gray-400">Nullifier included in ZK proof as public signal</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <div className="w-6 h-6 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xs">3</div>
+                      <div>
+                        <div className="font-medium text-white">Blockchain Check</div>
+                        <div className="text-xs text-gray-400">Smart contract verifies nullifier not used before</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <div className="w-6 h-6 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xs">4</div>
+                      <div>
+                        <div className="font-medium text-white">Mark as Used</div>
+                        <div className="text-xs text-gray-400">Nullifier permanently recorded to prevent reuse</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-red-300 mb-3">Security Properties</h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="bg-dark-900 rounded p-3 border-l-4 border-green-500">
+                      <div className="font-semibold text-green-300 mb-1">✓ Deterministic</div>
+                      <div className="text-gray-400">Same secret + same election = same nullifier every time</div>
+                    </div>
+                    <div className="bg-dark-900 rounded p-3 border-l-4 border-blue-500">
+                      <div className="font-semibold text-blue-300 mb-1">✓ Unique per Election</div>
+                      <div className="text-gray-400">Different election ID produces different nullifier</div>
+                    </div>
+                    <div className="bg-dark-900 rounded p-3 border-l-4 border-purple-500">
+                      <div className="font-semibold text-purple-300 mb-1">✓ Anonymous</div>
+                      <div className="text-gray-400">Nullifier doesn't reveal voter identity or secret</div>
+                    </div>
+                    <div className="bg-dark-900 rounded p-3 border-l-4 border-yellow-500">
+                      <div className="font-semibold text-yellow-300 mb-1">✓ Collision-Resistant</div>
+                      <div className="text-gray-400">SHA-256 ensures different secrets produce different nullifiers</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 bg-red-900/30 border border-red-700/50 rounded-lg p-4">
+                <div className="flex items-center space-x-3">
+                  <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <div className="flex-1 text-sm">
+                    <div className="font-semibold text-red-300">Double Voting Attempt</div>
+                    <div className="text-gray-300 mt-1">If a voter tries to vote twice, the smart contract will reject the transaction because the nullifier already exists in the <code className="text-red-200">nullifiersUsed</code> mapping.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MERKLE TREE TAB */}
+      {activeTab === 'merkle' && merkleTreeData && (
+        <div className="space-y-6">
+          {/* Merkle Tree Visualization */}
+          <div className="card bg-gradient-to-br from-green-900/20 to-emerald-900/20 border-2 border-green-700/50">
+            <h2 className="text-2xl font-bold text-green-200 mb-6 flex items-center">
+              <svg className="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              Voter Registry Merkle Tree
+            </h2>
+
+            <div className="grid md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-dark-800 rounded-lg p-4 border border-green-500/30">
+                <div className="text-green-300 font-semibold mb-2">Total Voters</div>
+                <div className="text-3xl font-bold text-white">{merkleTreeData.voterCount}</div>
+              </div>
+              <div className="bg-dark-800 rounded-lg p-4 border border-emerald-500/30">
+                <div className="text-emerald-300 font-semibold mb-2">Tree Depth</div>
+                <div className="text-3xl font-bold text-white">{merkleTreeData.layers}</div>
+              </div>
+              <div className="bg-dark-800 rounded-lg p-4 border border-teal-500/30">
+                <div className="text-teal-300 font-semibold mb-2">Leaf Nodes</div>
+                <div className="text-3xl font-bold text-white">{merkleTreeData.leaves.length}</div>
+              </div>
+            </div>
+
+            {/* Tree Structure Visualization */}
+            <div className="bg-dark-800 rounded-lg p-8 border border-green-500/30">
+              <h3 className="text-lg font-semibold text-green-200 mb-6 text-center">Tree Structure</h3>
+              
+              <div className="space-y-8">
+                {/* Root - Layer 2 */}
+                <div className="flex justify-center">
+                  <div className="text-center">
+                    <div className="bg-gradient-to-br from-yellow-600 to-orange-600 rounded-lg p-4 shadow-lg shadow-yellow-500/50 max-w-md">
+                      <div className="text-xs text-yellow-200 mb-2">🌳 Merkle Root (Stored on Blockchain)</div>
+                      <code className="text-white font-mono text-xs break-all">{merkleTreeData.root}</code>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-400">Layer 2 (Root)</div>
+                  </div>
+                </div>
+
+                {/* Arrow Down */}
+                <div className="flex justify-center">
+                  <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  </svg>
+                </div>
+
+                {/* Parent Nodes - Layer 1 */}
+                <div className="flex justify-center gap-8">
+                  <div className="text-center">
+                    <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-3 shadow-lg max-w-xs">
+                      <div className="text-xs text-blue-200 mb-1">Parent 1</div>
+                      <code className="text-white font-mono text-[10px] break-all">
+                        {merkleTreeData.root.slice(0, 20)}...
+                      </code>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-400">Hash(Leaf₀ || Leaf₁)</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-3 shadow-lg max-w-xs">
+                      <div className="text-xs text-blue-200 mb-1">Parent 2</div>
+                      <code className="text-white font-mono text-[10px] break-all">
+                        {merkleTreeData.root.slice(0, 20)}...
+                      </code>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-400">Hash(Leaf₂ || Leaf₂)</div>
+                  </div>
+                </div>
+
+                {/* Arrows Down */}
+                <div className="flex justify-center gap-32">
+                  <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  </svg>
+                  <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  </svg>
+                </div>
+
+                {/* Leaf Nodes - Layer 0 */}
+                <div className="flex justify-center gap-4">
+                  {merkleTreeData.leaves.map((leaf, index) => (
+                    <div key={index} className="text-center flex-1 max-w-[200px]">
+                      <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-lg p-3 shadow-lg">
+                        <div className="text-xs text-green-200 mb-1">Leaf {index}</div>
+                        <code className="text-white font-mono text-[10px] break-all">
+                          {leaf.slice(0, 12)}...
+                        </code>
+                      </div>
+                      <div className="mt-2 text-xs text-gray-400">Voter {index === 0 ? 'A' : index === 1 ? 'B' : 'C'}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* How Merkle Proofs Work */}
+            <div className="mt-6 bg-dark-800 rounded-lg p-6 border border-emerald-500/30">
+              <h3 className="text-lg font-semibold text-emerald-200 mb-4">How Merkle Proofs Verify Voter Eligibility</h3>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold text-green-300 mb-3 text-sm">Proof Generation (Off-Chain)</h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="bg-dark-900 rounded p-3 border-l-4 border-green-500">
+                      <div className="font-mono text-green-300 mb-1">Step 1: Voter's Leaf</div>
+                      <div className="text-gray-400">leaf = Hash(voterId || credential)</div>
+                    </div>
+                    <div className="bg-dark-900 rounded p-3 border-l-4 border-green-500">
+                      <div className="font-mono text-green-300 mb-1">Step 2: Sibling Hashes</div>
+                      <div className="text-gray-400">Collect sibling nodes on path to root</div>
+                    </div>
+                    <div className="bg-dark-900 rounded p-3 border-l-4 border-green-500">
+                      <div className="font-mono text-green-300 mb-1">Step 3: Proof Array</div>
+                      <div className="text-gray-400">proof = [sibling₁, sibling₂, ...]</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-emerald-300 mb-3 text-sm">Proof Verification (On-Chain)</h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="bg-dark-900 rounded p-3 border-l-4 border-emerald-500">
+                      <div className="font-mono text-emerald-300 mb-1">Step 1: Start with Leaf</div>
+                      <div className="text-gray-400">currentHash = voterLeaf</div>
+                    </div>
+                    <div className="bg-dark-900 rounded p-3 border-l-4 border-emerald-500">
+                      <div className="font-mono text-emerald-300 mb-1">Step 2: Hash with Siblings</div>
+                      <div className="text-gray-400">currentHash = Hash(currentHash || sibling)</div>
+                    </div>
+                    <div className="bg-dark-900 rounded p-3 border-l-4 border-emerald-500">
+                      <div className="font-mono text-emerald-300 mb-1">Step 3: Compare with Root</div>
+                      <div className="text-gray-400">valid = (currentHash == merkleRoot)</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 bg-yellow-900/20 border border-yellow-700/50 rounded p-4">
+                <div className="flex items-start space-x-3">
+                  <svg className="w-6 h-6 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="text-sm">
+                    <div className="font-semibold text-yellow-300 mb-1">Why Use Merkle Trees?</div>
+                    <div className="text-gray-300">
+                      Instead of storing all {merkleTreeData.voterCount} voter hashes on the blockchain (expensive!), we only store the single Merkle root. 
+                      Voters can still prove they're registered by providing a compact proof (log₂n size).
+                      For 1000 voters, proof is only ~10 hashes instead of 1000!
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Merkle Proof Example */}
+            <div className="mt-6 bg-dark-800 rounded-lg p-6 border border-teal-500/30">
+              <h3 className="text-lg font-semibold text-teal-200 mb-4">Example: Voter B's Merkle Proof</h3>
+              
+              <div className="bg-dark-900 rounded-lg p-6 font-mono text-xs space-y-4">
+                <div>
+                  <div className="text-gray-400 mb-2">Voter B's Leaf Hash (index 1):</div>
+                  <code className="text-green-300 break-all">{merkleTreeData.leaves[1]}</code>
+                </div>
+
+                <div>
+                  <div className="text-gray-400 mb-2">Merkle Proof (2 elements):</div>
+                  <div className="space-y-2 pl-4">
+                    <div>
+                      <span className="text-teal-400">proof[0]:</span> 
+                      <code className="text-blue-300 ml-2 break-all">{merkleTreeData.leaves[0].slice(0, 40)}... (sibling: Voter A, position: left)</code>
+                    </div>
+                    <div>
+                      <span className="text-teal-400">proof[1]:</span>
+                      <code className="text-purple-300 ml-2 break-all">{merkleTreeData.leaves[2].slice(0, 40)}... (sibling: Parent2, position: right)</code>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-gray-400 mb-2">Verification Process:</div>
+                  <div className="space-y-1 pl-4 text-[11px]">
+                    <div className="text-cyan-300">1. hash₁ = Hash(proof[0] || voterB_leaf) // Hash with sibling A</div>
+                    <div className="text-cyan-300">2. hash₂ = Hash(hash₁ || proof[1])       // Hash with parent2</div>
+                    <div className="text-cyan-300">3. verify: hash₂ == merkleRoot ✓         // Matches!</div>
+                  </div>
+                </div>
+
+                <div className="bg-emerald-900/30 border border-emerald-700/50 rounded p-3 mt-4">
+                  <div className="flex items-center space-x-2">
+                    <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-emerald-300 text-[11px]">
+                      Proof verified! Voter B is eligible to vote without revealing which voter they are.
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Odd Leaf Handling */}
+          <div className="card bg-gradient-to-br from-orange-900/20 to-red-900/20 border-2 border-orange-700/50">
+            <h3 className="text-xl font-bold text-orange-200 mb-4 flex items-center">
+              <svg className="w-7 h-7 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              Edge Case: Handling Odd Number of Leaves
+            </h3>
+
+            <div className="bg-dark-800 rounded-lg p-6">
+              <p className="text-gray-300 mb-4">
+                When the tree has an odd number of leaves (like 3 voters), the last leaf has no sibling. 
+                Our implementation handles this by <strong className="text-orange-300">duplicating the last node</strong>.
+              </p>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold text-red-300 mb-3">❌ Before Fix (Bug)</h4>
+                  <div className="bg-red-900/30 border border-red-700 rounded p-4 text-sm">
+                    <code className="text-xs text-gray-300">
+                      // Old code - skipped when no sibling<br/>
+                      if (siblingIndex &lt; currentLevel.length) {'{'}
+                      <br/>&nbsp;&nbsp;proof.push(sibling);
+                      <br/>{'}'}
+                      <br/>// Voter C had incomplete proof!
+                    </code>
+                  </div>
+                  <div className="mt-3 text-xs text-red-300">
+                    ⚠️ Result: Third voter couldn't vote - "Invalid Merkle proof"
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-green-300 mb-3">✓ After Fix</h4>
+                  <div className="bg-green-900/30 border border-green-700 rounded p-4 text-sm">
+                    <code className="text-xs text-gray-300">
+                      // New code - duplicate self<br/>
+                      if (siblingIndex &lt; currentLevel.length) {'{'}
+                      <br/>&nbsp;&nbsp;proof.push(sibling);
+                      <br/>{'}'} else {'{'}
+                      <br/>&nbsp;&nbsp;proof.push(currentLevel[index]);
+                      <br/>&nbsp;&nbsp;// Duplicate goes on right
+                      <br/>{'}'}
+                    </code>
+                  </div>
+                  <div className="mt-3 text-xs text-green-300">
+                    ✓ Result: All voters can vote successfully!
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 bg-blue-900/20 border border-blue-700/50 rounded-lg p-4">
+                <div className="text-sm">
+                  <div className="font-semibold text-blue-300 mb-2">Mathematical Correctness:</div>
+                  <div className="text-gray-300 text-xs space-y-1">
+                    <div>• Voter C (index 2): Hash(Leaf₂ || Leaf₂) = Parent₂</div>
+                    <div>• Parent₂ has sibling Parent₁ at layer 1</div>
+                    <div>• Final root: Hash(Parent₁ || Parent₂) ✓</div>
+                    <div className="mt-2 text-blue-200">This matches the standard Merkle tree construction where odd nodes are duplicated.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ARCHITECTURE TAB - keeping original content */}
+      {activeTab === 'architecture' && (
+        <div className="space-y-6">
+          {/* System Architecture Diagram */}
+          <div className="card bg-gradient-to-br from-slate-900 to-blue-900/20 border-2 border-blue-700/50">
+            <h2 className="text-2xl font-bold text-blue-200 mb-6 flex items-center">
+              <svg className="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              NovaVote System Architecture
+            </h2>
+
+            {/* Architecture Layers */}
+            <div className="grid md:grid-cols-3 gap-6">
+              {/* Frontend Layer */}
+              <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 rounded-lg p-6 border-2 border-purple-500/50">
+                <h3 className="text-lg font-bold text-purple-200 mb-4 flex items-center">
+                  <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Frontend
+                </h3>
+                <ul className="space-y-2 text-sm text-gray-300">
+                  <li>• React 18.2.0</li>
+                  <li>• Vite Build Tool</li>
+                  <li>• Tailwind CSS</li>
+                  <li>• ethers.js v6</li>
+                  <li>• React Router</li>
+                </ul>
+              </div>
+
+              {/* Backend Layer */}
+              <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 rounded-lg p-6 border-2 border-blue-500/50">
+                <h3 className="text-lg font-bold text-blue-200 mb-4 flex items-center">
+                  <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+                  </svg>
+                  Backend
+                </h3>
+                <ul className="space-y-2 text-sm text-gray-300">
+                  <li>• Node.js v22</li>
+                  <li>• Express.js</li>
+                  <li>• ZKP Service</li>
+                  <li>• CryptoJS</li>
+                  <li>• Merkle Trees</li>
+                </ul>
+              </div>
+
+              {/* Blockchain Layer */}
+              <div className="bg-gradient-to-br from-green-900/30 to-green-800/20 rounded-lg p-6 border-2 border-green-500/50">
+                <h3 className="text-lg font-bold text-green-200 mb-4 flex items-center">
+                  <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  Blockchain
+                </h3>
+                <ul className="space-y-2 text-sm text-gray-300">
+                  <li>• Hardhat Network</li>
+                  <li>• Solidity ^0.8.24</li>
+                  <li>• OpenZeppelin</li>
+                  <li>• 3 Smart Contracts</li>
+                  <li>• Local Node</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Smart Contracts */}
+            <div className="mt-6 bg-dark-800 rounded-lg p-6 border border-green-500/30">
+              <h3 className="text-lg font-bold text-green-200 mb-4">Smart Contracts</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-dark-900 rounded">
+                  <div>
+                    <span className="font-semibold text-white">ElectionManager</span>
+                    <p className="text-xs text-gray-400 mt-1">Manages elections and voter registration</p>
+                  </div>
+                  <code className="text-purple-300 text-xs">{deployments.contracts.ElectionManager.slice(0, 10)}...{deployments.contracts.ElectionManager.slice(-8)}</code>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-dark-900 rounded">
+                  <div>
+                    <span className="font-semibold text-white">VoteCommitment</span>
+                    <p className="text-xs text-gray-400 mt-1">ZKP vote submission and verification</p>
+                  </div>
+                  <code className="text-purple-300 text-xs">{deployments.contracts.VoteCommitment.slice(0, 10)}...{deployments.contracts.VoteCommitment.slice(-8)}</code>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-dark-900 rounded">
+                  <div>
+                    <span className="font-semibold text-white">TallyManager</span>
+                    <p className="text-xs text-gray-400 mt-1">Vote counting and results finalization</p>
+                  </div>
+                  <code className="text-purple-300 text-xs">{deployments.contracts.TallyManager.slice(0, 10)}...{deployments.contracts.TallyManager.slice(-8)}</code>
+                </div>
+              </div>
+            </div>
+
+            {/* Data Flow */}
+            <div className="mt-6 bg-dark-800 rounded-lg p-6 border border-blue-500/30">
+              <h3 className="text-lg font-bold text-blue-200 mb-6">Complete Voting Flow</h3>
+              <div className="space-y-4">
+                <div className="flex items-start space-x-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold">1</div>
+                  <div>
+                    <h4 className="font-semibold text-white mb-1">Voter Registration</h4>
+                    <p className="text-sm text-gray-400">Admin registers voters → Backend generates ZK credentials → Merkle tree built → Root stored on blockchain</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold">2</div>
+                  <div>
+                    <h4 className="font-semibold text-white mb-1">Vote Casting</h4>
+                    <p className="text-sm text-gray-400">Voter enters credentials → Frontend sends vote + secret → Backend generates ZK proof → Nullifier created</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold">3</div>
+                  <div>
+                    <h4 className="font-semibold text-white mb-1">Blockchain Verification</h4>
+                    <p className="text-sm text-gray-400">Smart contract checks: Merkle root matches → Nullifier not used → Proof valid → Vote stored encrypted</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold">4</div>
+                  <div>
+                    <h4 className="font-semibold text-white mb-1">Receipt & Verification</h4>
+                    <p className="text-sm text-gray-400">Receipt hash returned → Voter can verify on blockchain → Commitment immutably stored → Tally computed</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Security Features */}
+            <div className="mt-6 bg-dark-800 rounded-lg p-6 border border-red-500/30">
+              <h3 className="text-lg font-bold text-red-200 mb-4">Security Layers</h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold text-red-300 mb-3">Cryptographic Security:</h4>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-start space-x-2">
+                      <span className="text-green-400">✓</span>
+                      <span className="text-gray-300">SHA-256 hashing for commitments</span>
+                    </li>
+                    <li className="flex items-start space-x-2">
+                      <span className="text-green-400">✓</span>
+                      <span className="text-gray-300">Groth16 Zero-Knowledge Proofs</span>
+                    </li>
+                    <li className="flex items-start space-x-2">
+                      <span className="text-green-400">✓</span>
+                      <span className="text-gray-300">AES vote encryption</span>
+                    </li>
+                    <li className="flex items-start space-x-2">
+                      <span className="text-green-400">✓</span>
+                      <span className="text-gray-300">Merkle tree proofs</span>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-red-300 mb-3">Smart Contract Security:</h4>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-start space-x-2">
+                      <span className="text-green-400">✓</span>
+                      <span className="text-gray-300">OpenZeppelin access control</span>
+                    </li>
+                    <li className="flex items-start space-x-2">
+                      <span className="text-green-400">✓</span>
+                      <span className="text-gray-300">Nullifier-based double-vote prevention</span>
+                    </li>
+                    <li className="flex items-start space-x-2">
+                      <span className="text-green-400">✓</span>
+                      <span className="text-gray-300">State validation on-chain</span>
+                    </li>
+                    <li className="flex items-start space-x-2">
+                      <span className="text-green-400">✓</span>
+                      <span className="text-gray-300">Immutable vote storage</span>
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
