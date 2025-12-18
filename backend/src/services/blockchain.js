@@ -18,6 +18,13 @@ class BlockchainService {
       const rpcUrl = process.env.BLOCKCHAIN_RPC_URL || 'http://127.0.0.1:8545';
       this.provider = new ethers.JsonRpcProvider(rpcUrl);
 
+      // Test connection
+      try {
+        await this.provider.getNetwork();
+      } catch (err) {
+        throw new Error('Cannot connect to blockchain node. Is Hardhat running on port 8545?');
+      }
+
       // Get signer (using first account from Hardhat)
       const accounts = await this.provider.listAccounts();
       if (accounts.length === 0) {
@@ -64,8 +71,19 @@ class BlockchainService {
       console.log('📋 ElectionManager:', deployments.contracts.ElectionManager);
       console.log('🗳️  VoteCommitment:', deployments.contracts.VoteCommitment);
       console.log('📊 TallyManager:', deployments.contracts.TallyManager);
+      
+      // Test contract connectivity
+      try {
+        const code = await this.provider.getCode(deployments.contracts.ElectionManager);
+        if (code === '0x') {
+          throw new Error('ElectionManager contract not found at deployed address. Please redeploy contracts.');
+        }
+      } catch (err) {
+        console.error('⚠️  Contract verification failed:', err.message);
+      }
     } catch (error) {
       console.error('❌ Failed to initialize blockchain service:', error.message);
+      console.error('Stack:', error.stack);
       throw error;
     }
   }

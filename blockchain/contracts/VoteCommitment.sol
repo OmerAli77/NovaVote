@@ -163,7 +163,10 @@ contract VoteCommitment {
      * @param electionId The ID of the election
      * @param receiptHash The receipt hash to verify
      * @return exists Whether the receipt is valid
-     * @return commitment The commitment data
+     * @return encryptedVote The encrypted vote hash
+     * @return nullifier The nullifier used
+     * @return proofHash The ZK proof hash
+     * @return timestamp When the vote was cast
      */
     function verifyReceipt(
         uint256 electionId,

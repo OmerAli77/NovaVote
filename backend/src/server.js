@@ -33,6 +33,9 @@ const authRoutes = require('./routes/auth');
 const auditRoutes = require('./routes/audit');
 const adminRoutes = require('./routes/admin');
 
+// Import blockchain service
+const blockchainService = require('./services/blockchain');
+
 // Use routes
 app.use('/api/elections', electionRoutes);
 app.use('/api/votes', voteRoutes);
@@ -71,12 +74,23 @@ app.use((req, res) => {
 });
 
 // Start server
-app.listen(PORT, HOST, () => {
+app.listen(PORT, HOST, async () => {
   console.log(`🚀 NovaVote Backend Server running on http://${HOST}:${PORT}`);
   console.log(`📡 API endpoint: http://localhost:${PORT}/api`);
   console.log(`🌐 Network access: http://<your-ip>:${PORT}/api`);
-  console.log(`🔗 Blockchain RPC: ${process.env.BLOCKCHAIN_RPC_URL}`);
+  console.log(`🔗 Blockchain RPC: ${process.env.BLOCKCHAIN_RPC_URL || 'http://127.0.0.1:8545'}`);
   console.log(`\n💡 To access from other devices, use your computer's IP address`);
+  
+  // Initialize blockchain service
+  console.log('\n🔄 Initializing blockchain connection...');
+  try {
+    await blockchainService.initialize();
+    console.log('✅ Blockchain service ready\n');
+  } catch (error) {
+    console.error('❌ Failed to initialize blockchain service:', error.message);
+    console.error('⚠️  Server running but blockchain features unavailable');
+    console.error('💡 Make sure Hardhat node is running and contracts are deployed\n');
+  }
 });
 
 module.exports = app;
