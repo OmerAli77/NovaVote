@@ -1,0 +1,74 @@
+{
+  "testDate": "2025-12-18T06:51:36.215Z",
+  "results": [
+    {
+      "scale": "Small District",
+      "voters": 500,
+      "expectedVotes": 400,
+      "sampleSize": 100,
+      "deployTime": 101,
+      "electionTime": 39,
+      "regTime": 93,
+      "avgVoteTime": "8.20",
+      "avgGas": "194517",
+      "tps": "106.72",
+      "projectedTime": "3.3",
+      "projectedGas": "77.8",
+      "projectedCost": "23.34",
+      "success": "100.0"
+    },
+    {
+      "scale": "Medium District",
+      "voters": 1000,
+      "expectedVotes": 800,
+      "sampleSize": 100,
+      "deployTime": 90,
+      "electionTime": 37,
+      "regTime": 132,
+      "avgVoteTime": "8.56",
+      "avgGas": "194517",
+      "tps": "103.84",
+      "projectedTime": "6.8",
+      "projectedGas": "155.6",
+      "projectedCost": "46.68",
+      "success": "100.0"
+    },
+    {
+      "scale": "Large District",
+      "voters": 2500,
+      "expectedVotes": 2000,
+      "sampleSize": 100,
+      "deployTime": 90,
+      "electionTime": 37,
+      "regTime": 332,
+      "avgVoteTime": "8.36",
+      "avgGas": "194518",
+      "tps": "106.72",
+      "projectedTime": "16.7",
+      "projectedGas": "389.0",
+      "projectedCost": "116.70",
+      "success": "100.0"
+    },
+    {
+      "scale": "City-Level",
+      "voters": 5000,
+      "expectedVotes": 4000,
+      "sampleSize": 100,
+      "deployTime": 72,
+      "electionTime": 30,
+      "regTime": 622,
+      "avgVoteTime": "6.88",
+      "avgGas": "194517",
+      "tps": "126.42",
+      "projectedTime": "27.5",
+      "projectedGas": "778.1",
+      "projectedCost": "233.43",
+      "success": "100.0"
+    }
+  ],
+  "summary": {
+    "testsRun": 4,
+    "testsSucceeded": 4,
+    "maxVotersTested": 5000
+  }
+}

@@ -133,17 +133,17 @@ async function main() {
     {
       name: "Presidential Election 2025",
       candidates: ["Alice Johnson", "Bob Smith", "Carol Williams"],
-      voterCount: 100
+      voterCount: 5000  // Realistic city/district level
     },
     {
       name: "Senate Election - District 5",
       candidates: ["David Brown", "Eve Davis"],
-      voterCount: 75
+      voterCount: 2500  // Mid-size district
     },
     {
       name: "City Council - Ward 3",
       candidates: ["Frank Miller", "Grace Lee", "Henry Taylor", "Ivy Chen"],
-      voterCount: 50
+      voterCount: 1000  // Local ward election
     }
   ];
 
