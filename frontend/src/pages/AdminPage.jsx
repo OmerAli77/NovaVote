@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { electionsAPI, votesAPI, adminAPI } from '../services/api'
+import RegisterVotersTab from '../components/RegisterVotersTab'
 
 export default function AdminPage({ isAdmin }) {
   const [activeTab, setActiveTab] = useState('create')
@@ -117,6 +118,12 @@ export default function AdminPage({ isAdmin }) {
           Create Election
         </TabButton>
         <TabButton
+          active={activeTab === 'register'}
+          onClick={() => setActiveTab('register')}
+        >
+          Register Voters
+        </TabButton>
+        <TabButton
           active={activeTab === 'manage'}
           onClick={() => setActiveTab('manage')}
         >
@@ -131,6 +138,7 @@ export default function AdminPage({ isAdmin }) {
       </div>
 
       {activeTab === 'create' && <CreateElectionTab onSuccess={loadElections} />}
+      {activeTab === 'register' && <RegisterVotersTab elections={elections} />}
       {activeTab === 'manage' && (
         <ManageElectionsTab
           elections={elections}

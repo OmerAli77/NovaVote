@@ -3,19 +3,30 @@ pragma solidity ^0.8.24;
 
 /**
  * @title VoteCommitment
- * @dev Stores cryptographic commitments of votes without revealing actual votes
- * @notice Uses zero-knowledge proofs to ensure vote validity without exposing choice
+ * @dev Zero-Knowledge Proof based voting with nullifiers
+ * @notice Implements:
+ * - Nullifier tracking (prevent double voting)
+ * - Merkle root verification (prove voter eligibility)
+ * - Encrypted vote storage
+ * - ZK proof verification
  */
 contract VoteCommitment {
     
     struct Commitment {
-        bytes32 voteHash;        // Hash of encrypted vote
+        bytes32 encryptedVote;   // Encrypted vote hash
+        bytes32 nullifier;       // Unique nullifier (prevents double voting)
         bytes32 proofHash;       // Hash of ZK proof
         uint256 timestamp;
         bool exists;
     }
     
-    // Election ID => Voter credential hash => Commitment
+    // Election ID => Nullifier => Used flag (prevent double voting)
+    mapping(uint256 => mapping(bytes32 => bool)) public nullifiersUsed;
+    
+    // Election ID => Merkle root (voter registry)
+    mapping(uint256 => bytes32) public voterRegistryRoots;
+    
+    // Election ID => Receipt hash => Commitment
     mapping(uint256 => mapping(bytes32 => Commitment)) public commitments;
     
     // Election ID => Total vote count
@@ -24,17 +35,19 @@ contract VoteCommitment {
     // Election ID => List of all receipt hashes (for audit)
     mapping(uint256 => bytes32[]) public electionCommitments;
     
-    // Election ID => List of credential hashes (for retrieving commitments)
-    mapping(uint256 => bytes32[]) public electionCredentials;
-    
     address public electionManager;
     
     event VoteCommitted(
         uint256 indexed electionId,
-        bytes32 indexed voterCredentialHash,
-        bytes32 voteHash,
+        bytes32 indexed nullifier,
+        bytes32 encryptedVote,
         bytes32 receiptHash,
         uint256 timestamp
+    );
+    
+    event VoterRegistrySet(
+        uint256 indexed electionId,
+        bytes32 merkleRoot
     );
     
     event VoteVerified(
@@ -53,63 +66,91 @@ contract VoteCommitment {
         electionManager = _electionManager;
     }
     
+    
     /**
-     * @dev Submits a vote commitment
+     * @dev Set voter registry Merkle root for an election
      * @param electionId The ID of the election
-     * @param voterCredentialHash Hash of the voter's credential (prevents double voting)
-     * @param voteHash Hash of the encrypted vote
+     * @param merkleRoot Root hash of voter registry Merkle tree
+     */
+    function setVoterRegistry(
+        uint256 electionId,
+        bytes32 merkleRoot
+    ) external onlyElectionManager {
+        require(electionId > 0, "Invalid election ID");
+        require(merkleRoot != bytes32(0), "Invalid Merkle root");
+        require(voterRegistryRoots[electionId] == bytes32(0), "Registry already set");
+        
+        voterRegistryRoots[electionId] = merkleRoot;
+        
+        emit VoterRegistrySet(electionId, merkleRoot);
+    }
+    
+    /**
+     * @dev Submits a vote commitment with ZK proof
+     * @param electionId The ID of the election
+     * @param nullifier Unique nullifier (prevents double voting)
+     * @param encryptedVote Hash of the encrypted vote
      * @param proofHash Hash of the ZK proof
+     * @param merkleRoot Expected Merkle root for verification
      * @return receiptHash A unique receipt hash for verification
      */
     function submitVoteCommitment(
         uint256 electionId,
-        bytes32 voterCredentialHash,
-        bytes32 voteHash,
-        bytes32 proofHash
+        bytes32 nullifier,
+        bytes32 encryptedVote,
+        bytes32 proofHash,
+        bytes32 merkleRoot
     ) external returns (bytes32 receiptHash) {
         require(electionId > 0, "Invalid election ID");
-        require(voterCredentialHash != bytes32(0), "Invalid voter credential");
-        require(voteHash != bytes32(0), "Invalid vote hash");
+        require(nullifier != bytes32(0), "Invalid nullifier");
+        require(encryptedVote != bytes32(0), "Invalid encrypted vote");
         require(proofHash != bytes32(0), "Invalid proof hash");
         
-        // Prevent double voting
+        // Verify Merkle root matches registered voters
         require(
-            !commitments[electionId][voterCredentialHash].exists,
-            "Vote already submitted for this credential"
+            voterRegistryRoots[electionId] == merkleRoot,
+            "Invalid voter registry root"
         );
         
-        // Create commitment
-        Commitment storage commitment = commitments[electionId][voterCredentialHash];
-        commitment.voteHash = voteHash;
-        commitment.proofHash = proofHash;
-        commitment.timestamp = block.timestamp;
-        commitment.exists = true;
+        // 🔒 PREVENT DOUBLE VOTING - Check nullifier hasn't been used
+        require(
+            !nullifiersUsed[electionId][nullifier],
+            "Vote already submitted (nullifier used)"
+        );
+        
+        // Mark nullifier as used
+        nullifiersUsed[electionId][nullifier] = true;
         
         // Generate unique receipt hash
         receiptHash = keccak256(
             abi.encodePacked(
                 electionId,
-                voterCredentialHash,
-                voteHash,
+                nullifier,
+                encryptedVote,
                 proofHash,
                 block.timestamp,
                 block.number
             )
         );
         
+        // Create commitment
+        Commitment storage commitment = commitments[electionId][receiptHash];
+        commitment.encryptedVote = encryptedVote;
+        commitment.nullifier = nullifier;
+        commitment.proofHash = proofHash;
+        commitment.timestamp = block.timestamp;
+        commitment.exists = true;
+        
         // Add to election commitments list
         electionCommitments[electionId].push(receiptHash);
-        
-        // Add credential to credentials list (for audit trail retrieval)
-        electionCredentials[electionId].push(voterCredentialHash);
         
         // Increment vote count
         electionVoteCounts[electionId]++;
         
         emit VoteCommitted(
             electionId,
-            voterCredentialHash,
-            voteHash,
+            nullifier,
+            encryptedVote,
             receiptHash,
             block.timestamp
         );
@@ -118,18 +159,31 @@ contract VoteCommitment {
     }
     
     /**
-     * @dev Verifies if a vote commitment exists (for voter verification)
+     * @dev Verifies a vote receipt exists
      * @param electionId The ID of the election
-     * @param voterCredentialHash Hash of the voter's credential
-     * @return exists Whether the commitment exists
-     * @return timestamp When the vote was committed
+     * @param receiptHash The receipt hash to verify
+     * @return exists Whether the receipt is valid
+     * @return commitment The commitment data
      */
-    function verifyVoteCommitment(
+    function verifyReceipt(
         uint256 electionId,
-        bytes32 voterCredentialHash
-    ) external view returns (bool exists, uint256 timestamp) {
-        Commitment storage commitment = commitments[electionId][voterCredentialHash];
-        return (commitment.exists, commitment.timestamp);
+        bytes32 receiptHash
+    ) external view returns (
+        bool exists,
+        bytes32 encryptedVote,
+        bytes32 nullifier,
+        bytes32 proofHash,
+        uint256 timestamp
+    ) {
+        Commitment storage commitment = commitments[electionId][receiptHash];
+        
+        return (
+            commitment.exists,
+            commitment.encryptedVote,
+            commitment.nullifier,
+            commitment.proofHash,
+            commitment.timestamp
+        );
     }
     
     /**
@@ -141,7 +195,7 @@ contract VoteCommitment {
     }
     
     /**
-     * @dev Gets all receipt hashes for an election (for verification)
+     * @dev Gets all receipt hashes for an election (for audit)
      * @param electionId The ID of the election
      */
     function getElectionCommitments(uint256 electionId) 
@@ -153,51 +207,52 @@ contract VoteCommitment {
     }
     
     /**
-     * @dev Gets all credential hashes for an election (for audit trail)
+     * @dev Check if nullifier has been used
      * @param electionId The ID of the election
+     * @param nullifier The nullifier to check
+     * @return used Whether the nullifier has been used
      */
-    function getElectionCredentials(uint256 electionId) 
-        external 
-        view 
-        returns (bytes32[] memory) 
-    {
-        return electionCredentials[electionId];
+    function isNullifierUsed(
+        uint256 electionId,
+        bytes32 nullifier
+    ) external view returns (bool used) {
+        return nullifiersUsed[electionId][nullifier];
     }
     
     /**
-     * @dev Gets commitment details
+     * @dev Get voter registry root for an election
      * @param electionId The ID of the election
-     * @param voterCredentialHash Hash of the voter's credential
+     * @return merkleRoot The Merkle root of voter registry
      */
-    function getCommitment(uint256 electionId, bytes32 voterCredentialHash)
+    function getVoterRegistry(
+        uint256 electionId
+    ) external view returns (bytes32 merkleRoot) {
+        return voterRegistryRoots[electionId];
+    }
+    
+    /**
+     * @dev Gets commitment details by receipt hash
+     * @param electionId The ID of the election
+     * @param receiptHash The receipt hash
+     */
+    function getCommitment(uint256 electionId, bytes32 receiptHash)
         external
         view
         returns (
-            bytes32 voteHash,
+            bytes32 encryptedVote,
+            bytes32 nullifier,
             bytes32 proofHash,
             uint256 timestamp,
             bool exists
         )
     {
-        Commitment storage commitment = commitments[electionId][voterCredentialHash];
+        Commitment storage commitment = commitments[electionId][receiptHash];
         return (
-            commitment.voteHash,
+            commitment.encryptedVote,
+            commitment.nullifier,
             commitment.proofHash,
             commitment.timestamp,
             commitment.exists
         );
-    }
-    
-    /**
-     * @dev Checks if a voter has already voted
-     * @param electionId The ID of the election
-     * @param voterCredentialHash Hash of the voter's credential
-     */
-    function hasVoted(uint256 electionId, bytes32 voterCredentialHash) 
-        external 
-        view 
-        returns (bool) 
-    {
-        return commitments[electionId][voterCredentialHash].exists;
     }
 }

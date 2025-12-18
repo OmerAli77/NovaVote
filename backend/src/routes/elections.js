@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const blockchainService = require('../services/blockchain');
+const zkpService = require('../services/zkp');
 const { ethers } = require('ethers');
 const { isLocalhost, checkAdminAccess } = require('../middleware/adminAccess');
 
@@ -194,6 +195,95 @@ router.post('/:electionId/end', isLocalhost, async (req, res) => {
     console.error('End election error:', error);
     res.status(500).json({
       error: 'Failed to end election',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * Register voters for an election (ADMIN ONLY - localhost access required)
+ * Creates Merkle tree of eligible voters
+ */
+router.post('/:electionId/register-voters', isLocalhost, async (req, res) => {
+  try {
+    await blockchainService.ensureInitialized();
+
+    const { electionId } = req.params;
+    const { voterIds } = req.body;
+
+    if (!voterIds || !Array.isArray(voterIds) || voterIds.length === 0) {
+      return res.status(400).json({
+        error: 'Voter IDs array is required'
+      });
+    }
+
+    // Generate credentials for all voters
+    const voterCredentials = voterIds.map(voterId => 
+      zkpService.generateVoterCredential(voterId, electionId)
+    );
+
+    // Build Merkle tree and register voters
+    const merkleRoot = zkpService.registerVoters(electionId, voterCredentials);
+
+    // Set voter registry on blockchain
+    const voteCommitment = blockchainService.getContract('voteCommitment');
+    const merkleRootBytes32 = '0x' + merkleRoot;
+    
+    const tx = await voteCommitment.setVoterRegistry(electionId, merkleRootBytes32);
+    const receipt = await tx.wait();
+
+    // Return credentials to voters (in production, send securely via email/secure channel)
+    const voterData = voterCredentials.map(vc => ({
+      voterId: vc.voterId,
+      credential: vc.credential,
+      secret: vc.secret  // ⚠️ CRITICAL: In production, send this privately to each voter
+    }));
+
+    res.json({
+      success: true,
+      merkleRoot,
+      transactionHash: receipt.hash,
+      votersRegistered: voterIds.length,
+      voterCredentials: voterData,  // ⚠️ In production, distribute these securely!
+      message: 'Voters registered successfully with ZK credentials'
+    });
+  } catch (error) {
+    console.error('Register voters error:', error);
+    res.status(500).json({
+      error: 'Failed to register voters',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * Get voter credential and Merkle proof (for voting)
+ */
+router.post('/:electionId/get-voter-proof', async (req, res) => {
+  try {
+    await blockchainService.ensureInitialized();
+
+    const { electionId } = req.params;
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({
+        error: 'Credential is required'
+      });
+    }
+
+    // Get Merkle proof for voter
+    const merkleProof = zkpService.getVoterMerkleProof(electionId, credential);
+    const merkleRoot = zkpService.getMerkleRoot(electionId);
+
+    res.json({
+      merkleProof,
+      merkleRoot
+    });
+  } catch (error) {
+    console.error('Get voter proof error:', error);
+    res.status(500).json({
+      error: 'Failed to get voter proof',
       details: error.message
     });
   }

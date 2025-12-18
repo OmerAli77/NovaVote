@@ -2,50 +2,98 @@ const express = require('express');
 const router = express.Router();
 const blockchainService = require('../services/blockchain');
 const cryptoService = require('../services/crypto');
+const zkpService = require('../services/zkp');
 const { ethers } = require('ethers');
 
 // In-memory storage for vote data (in production, use encrypted database)
 const voteStore = new Map();
 
 /**
- * Submit a vote
+ * Submit a vote with Zero-Knowledge Proof
  */
 router.post('/submit', async (req, res) => {
   try {
     await blockchainService.ensureInitialized();
 
-    const { electionId, candidateId, credential } = req.body;
+    const { 
+      electionId, 
+      candidateId, 
+      credential,
+      secret,
+      merkleProof
+    } = req.body;
 
-    if (!electionId || candidateId === undefined || !credential) {
+    if (!electionId || candidateId === undefined || !credential || !secret) {
       return res.status(400).json({
-        error: 'Election ID, candidate ID, and credential are required'
+        error: 'Election ID, candidate ID, credential, and secret are required'
       });
     }
 
-    // Generate vote hash and proof
-    const voteHash = cryptoService.generateVoteHash(candidateId, credential);
-    const proofHash = cryptoService.generateProofHash(voteHash, credential);
-
-    // Verify proof (simplified)
-    if (!cryptoService.verifyProof(proofHash)) {
+    // Get election details to verify candidate validity
+    const electionManager = blockchainService.getContract('electionManager');
+    const election = await electionManager.getElection(electionId);
+    
+    // Get valid candidate IDs
+    const candidateCount = Number(election.candidateCount);
+    const validCandidates = Array.from({ length: candidateCount }, (_, i) => i);
+    
+    if (!validCandidates.includes(candidateId)) {
       return res.status(400).json({
-        error: 'Invalid proof'
+        error: 'Invalid candidate ID'
       });
     }
 
-    // Convert to bytes32
-    const credentialHash = cryptoService.stringToBytes32(credential);
-    const voteHashBytes32 = '0x' + voteHash;
-    const proofHashBytes32 = '0x' + proofHash;
+    // Get Merkle root for voter verification
+    const voteCommitment = blockchainService.getContract('voteCommitment');
+    const merkleRoot = await voteCommitment.getVoterRegistry(electionId);
+    
+    if (merkleRoot === ethers.ZeroHash) {
+      return res.status(400).json({
+        error: 'Voter registry not set for this election'
+      });
+    }
+
+    // Generate ZK Proof
+    let zkProof;
+    try {
+      zkProof = zkpService.generateZKProof({
+        candidateId,
+        credential,
+        secret,
+        electionId: electionId.toString(),
+        merkleProof: merkleProof || [],
+        merkleRoot,
+        validCandidates
+      });
+    } catch (error) {
+      return res.status(400).json({
+        error: 'ZK proof generation failed',
+        details: error.message
+      });
+    }
+
+    // Verify ZK Proof before submission
+    if (!zkpService.verifyZKProof(zkProof.proof, zkProof.publicSignals)) {
+      return res.status(400).json({
+        error: 'ZK proof verification failed'
+      });
+    }
+
+    // Mark nullifier as used
+    zkpService.markNullifierUsed(electionId.toString(), zkProof.nullifier);
+
+    // Convert to bytes32 for blockchain
+    const nullifierBytes32 = '0x' + zkProof.nullifier;
+    const encryptedVoteBytes32 = '0x' + zkProof.encryptedVote;
+    const proofHashBytes32 = '0x' + zkProof.proof.pi_a[0];
 
     // Submit to blockchain
-    const voteCommitment = blockchainService.getContract('voteCommitment');
-
     const tx = await voteCommitment.submitVoteCommitment(
       electionId,
-      credentialHash,
-      voteHashBytes32,
-      proofHashBytes32
+      nullifierBytes32,
+      encryptedVoteBytes32,
+      proofHashBytes32,
+      merkleRoot
     );
 
     const receipt = await tx.wait();
@@ -63,12 +111,13 @@ router.post('/submit', async (req, res) => {
     const receiptHash = parsedEvent.args.receiptHash;
 
     // Store vote data encrypted (for tallying)
-    const voteKey = `${electionId}-${credential}`;
+    const voteKey = `${electionId}-${zkProof.nullifier}`;
     voteStore.set(voteKey, {
       electionId,
       candidateId,
-      voteHash,
-      proofHash,
+      encryptedVote: zkProof.encryptedVote,
+      nullifier: zkProof.nullifier,
+      proofHash: zkProof.proof.pi_a[0],
       receiptHash,
       timestamp: new Date().toISOString()
     });
@@ -77,7 +126,11 @@ router.post('/submit', async (req, res) => {
       success: true,
       receiptHash,
       transactionHash: receipt.hash,
-      message: 'Vote submitted successfully'
+      zkProof: {
+        proof: zkProof.proof,
+        publicSignals: zkProof.publicSignals
+      },
+      message: 'Vote submitted successfully with ZK proof'
     });
   } catch (error) {
     console.error('Submit vote error:', error);
