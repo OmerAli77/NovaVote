@@ -405,6 +405,54 @@ class ZKPService {
   }
 
   /**
+   * Build Merkle tree only (without saving)
+   * 
+   * @param {string} electionId - Election ID  
+   * @param {Array} voterCredentials - Array of voter credential objects
+   * @returns {string} Merkle root
+   */
+  buildMerkleTreeOnly(electionId, voterCredentials) {
+    const leafHashes = voterCredentials.map(vc => vc.leafHash);
+    const tree = this.buildMerkleTree(leafHashes);
+    return tree.root;
+  }
+
+  /**
+   * Save voter registry (call only after blockchain success)
+   * 
+   * @param {string} electionId - Election ID
+   * @param {Array} voterCredentials - Array of voter credential objects
+   * @param {string} merkleRoot - Merkle root (already calculated)
+   */
+  saveVoterRegistry(electionId, voterCredentials, merkleRoot) {
+    const leafHashes = voterCredentials.map(vc => vc.leafHash);
+    const tree = this.buildMerkleTree(leafHashes);
+    
+    this.voterTrees.set(electionId, {
+      tree,
+      credentials: voterCredentials
+    });
+
+    // Store voter registry for proof generation
+    if (!this.voterRegistry.has(electionId)) {
+      this.voterRegistry.set(electionId, new Map());
+    }
+    
+    const registry = this.voterRegistry.get(electionId);
+    voterCredentials.forEach((vc, index) => {
+      registry.set(vc.credential, {
+        voterId: vc.voterId,
+        leafHash: vc.leafHash,
+        leafIndex: index,
+        merkleProof: this.getMerkleProof(tree.tree, index)
+      });
+    });
+
+    // Persist to disk
+    this.saveRegistry();
+  }
+
+  /**
    * Register voters for an election
    * Builds Merkle tree of eligible voters
    * 

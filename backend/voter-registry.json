@@ -43,6 +43,50 @@
           "voterId": "V003"
         }
       ]
+    },
+    "2": {
+      "tree": {
+        "root": "5853b0eb42560b299fd5667fb7b76dc5d0979a691bcb3e2ea1627f225bffef1c",
+        "tree": [
+          [
+            "6e92b9e266501905b9b5f169b9082173b44df5caa42238ee6d3f214dcc82f79c",
+            "a165d6913f5573016c27b01e3de2b53d122c5b10e133bf5400a67576f7cd76c3",
+            "aa31ab7256f8007e020d7264a7c405ec51aac6fa6781b4dc6a18c5ae1007c6a5"
+          ],
+          [
+            "e697306c73ebca4a606e9a9a7a556b53adc9e2a1bfac71b49862dad4ec1f230d",
+            "317714fe9bf44c63e142984ebfd6f813cf926f8022455f0eede497ace76c329b"
+          ],
+          [
+            "5853b0eb42560b299fd5667fb7b76dc5d0979a691bcb3e2ea1627f225bffef1c"
+          ]
+        ],
+        "leaves": [
+          "6e92b9e266501905b9b5f169b9082173b44df5caa42238ee6d3f214dcc82f79c",
+          "a165d6913f5573016c27b01e3de2b53d122c5b10e133bf5400a67576f7cd76c3",
+          "aa31ab7256f8007e020d7264a7c405ec51aac6fa6781b4dc6a18c5ae1007c6a5"
+        ]
+      },
+      "credentials": [
+        {
+          "credential": "0b97f73c84cc8d7c7802ae853c8c60f44cb116960b2b400c32e57fd3eee40599",
+          "secret": "d9f521e19407c605389c426063aaae602eef371893f24eb3004ed486c83b52d7",
+          "leafHash": "6e92b9e266501905b9b5f169b9082173b44df5caa42238ee6d3f214dcc82f79c",
+          "voterId": "V001"
+        },
+        {
+          "credential": "304e5bbc1df18209a05f9c20a4d28e07b1cb15acf4b8466e9601b16ca9293c9f",
+          "secret": "92f78aa1153b2377ab7d9760f6297bb688cd4bba3338c9d0f06c5655f09131e4",
+          "leafHash": "a165d6913f5573016c27b01e3de2b53d122c5b10e133bf5400a67576f7cd76c3",
+          "voterId": "V002"
+        },
+        {
+          "credential": "a71368ca62a4e05716c3b5dee196ff591d76270973bc80eb9a919a534a3fcd6d",
+          "secret": "651e8b74ebe339b7bcca974e3bb5b6ca5da7723fababc4487055e9a8fdd96305",
+          "leafHash": "aa31ab7256f8007e020d7264a7c405ec51aac6fa6781b4dc6a18c5ae1007c6a5",
+          "voterId": "V003"
+        }
+      ]
     }
   },
   "voterRegistry": {
@@ -84,6 +128,90 @@
         "merkleProof": [
           {
             "hash": "25c23abcbf7c228eedd6a765d12bc0836df1f0a67685aabac0165516fbf3edcc",
+            "position": "left"
+          }
+        ]
+      }
+    },
+    "2": {
+      "f6fa16991766347f5ded4d2225a998aca1a2ea0524ba5d71f96b0686117955a4": {
+        "voterId": "V001",
+        "leafHash": "1993c2b51320d6a6f1556f2e23ae2e4185c50379bba20fec0758b9a0fbefaba4",
+        "leafIndex": 0,
+        "merkleProof": [
+          {
+            "hash": "9ba561af24651c5676bdf264a38b7c3fee7cfcb30a7c2377e683c9b34b0c3981",
+            "position": "right"
+          },
+          {
+            "hash": "75edd45b6d5cf29063463043e94e81878510a5b3dd52e9fa4074d27115763aef",
+            "position": "right"
+          }
+        ]
+      },
+      "15a5517a0c238cffc0f8b711a397f4d6ff259ab20b5224af7b07831143acc758": {
+        "voterId": "V002",
+        "leafHash": "9ba561af24651c5676bdf264a38b7c3fee7cfcb30a7c2377e683c9b34b0c3981",
+        "leafIndex": 1,
+        "merkleProof": [
+          {
+            "hash": "1993c2b51320d6a6f1556f2e23ae2e4185c50379bba20fec0758b9a0fbefaba4",
+            "position": "left"
+          },
+          {
+            "hash": "75edd45b6d5cf29063463043e94e81878510a5b3dd52e9fa4074d27115763aef",
+            "position": "right"
+          }
+        ]
+      },
+      "9093f6ddc17e25c61336f12f0baff01d7c4e56c34b39438e61365ee3d1d48df2": {
+        "voterId": "V003",
+        "leafHash": "ecb4b2c7162f28e2024806b098940d016746404cb8ef7631248d0728b5cb7abd",
+        "leafIndex": 2,
+        "merkleProof": [
+          {
+            "hash": "c3c256de39221a85ea89386d3ededcd66d1cc8485a1627b4fc6d3feb9281da95",
+            "position": "left"
+          }
+        ]
+      },
+      "0b97f73c84cc8d7c7802ae853c8c60f44cb116960b2b400c32e57fd3eee40599": {
+        "voterId": "V001",
+        "leafHash": "6e92b9e266501905b9b5f169b9082173b44df5caa42238ee6d3f214dcc82f79c",
+        "leafIndex": 0,
+        "merkleProof": [
+          {
+            "hash": "a165d6913f5573016c27b01e3de2b53d122c5b10e133bf5400a67576f7cd76c3",
+            "position": "right"
+          },
+          {
+            "hash": "317714fe9bf44c63e142984ebfd6f813cf926f8022455f0eede497ace76c329b",
+            "position": "right"
+          }
+        ]
+      },
+      "304e5bbc1df18209a05f9c20a4d28e07b1cb15acf4b8466e9601b16ca9293c9f": {
+        "voterId": "V002",
+        "leafHash": "a165d6913f5573016c27b01e3de2b53d122c5b10e133bf5400a67576f7cd76c3",
+        "leafIndex": 1,
+        "merkleProof": [
+          {
+            "hash": "6e92b9e266501905b9b5f169b9082173b44df5caa42238ee6d3f214dcc82f79c",
+            "position": "left"
+          },
+          {
+            "hash": "317714fe9bf44c63e142984ebfd6f813cf926f8022455f0eede497ace76c329b",
+            "position": "right"
+          }
+        ]
+      },
+      "a71368ca62a4e05716c3b5dee196ff591d76270973bc80eb9a919a534a3fcd6d": {
+        "voterId": "V003",
+        "leafHash": "aa31ab7256f8007e020d7264a7c405ec51aac6fa6781b4dc6a18c5ae1007c6a5",
+        "leafIndex": 2,
+        "merkleProof": [
+          {
+            "hash": "e697306c73ebca4a606e9a9a7a556b53adc9e2a1bfac71b49862dad4ec1f230d",
             "position": "left"
           }
         ]
