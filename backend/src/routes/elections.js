@@ -225,11 +225,11 @@ router.post('/:electionId/register-voters', isLocalhost, async (req, res) => {
     // Build Merkle tree and register voters
     const merkleRoot = zkpService.registerVoters(electionId, voterCredentials);
 
-    // Set voter registry on blockchain
-    const voteCommitment = blockchainService.getContract('voteCommitment');
+    // Set voter registry on blockchain via ElectionManager
+    const electionManager = blockchainService.getContract('electionManager');
     const merkleRootBytes32 = '0x' + merkleRoot;
     
-    const tx = await voteCommitment.setVoterRegistry(electionId, merkleRootBytes32);
+    const tx = await electionManager.registerVoters(electionId, merkleRootBytes32);
     const receipt = await tx.wait();
 
     // Return credentials to voters (in production, send securely via email/secure channel)

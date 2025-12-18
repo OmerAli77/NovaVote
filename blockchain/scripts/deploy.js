@@ -34,6 +34,12 @@ async function main() {
   const tallyManagerAddress = await tallyManager.getAddress();
   console.log("✅ TallyManager deployed to:", tallyManagerAddress, "\n");
 
+  // Link ElectionManager to VoteCommitment
+  console.log("🔗 Linking ElectionManager to VoteCommitment...");
+  const tx = await electionManager.setVoteCommitmentAddress(voteCommitmentAddress);
+  await tx.wait();
+  console.log("✅ ElectionManager linked to VoteCommitment\n");
+
   // Save deployment addresses
   const deploymentInfo = {
     network: hre.network.name,

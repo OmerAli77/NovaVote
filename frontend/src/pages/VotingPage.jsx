@@ -14,10 +14,11 @@ export default function VotingPage() {
   const [zkProof, setZkProof] = useState(null)
 
   const credential = localStorage.getItem('credential')
+  const secret = localStorage.getItem('secret')
   const voterId = localStorage.getItem('voterId')
 
   useEffect(() => {
-    if (!credential || !voterId) {
+    if (!credential || !secret || !voterId) {
       navigate(`/login?electionId=${electionId}`)
       return
     }
@@ -95,7 +96,8 @@ export default function VotingPage() {
       const response = await votesAPI.submit({
         electionId,
         candidateId: selectedCandidate,
-        credential
+        credential,
+        secret
       })
 
       localStorage.setItem('receiptHash', response.data.receiptHash)

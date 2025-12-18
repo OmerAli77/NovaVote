@@ -45,13 +45,24 @@ router.post('/submit', async (req, res) => {
 
     // Get Merkle root for voter verification
     const voteCommitment = blockchainService.getContract('voteCommitment');
-    const merkleRoot = await voteCommitment.getVoterRegistry(electionId);
+    const merkleRoot = await voteCommitment.voterRegistryRoots(electionId);
     
     if (merkleRoot === ethers.ZeroHash) {
       return res.status(400).json({
         error: 'Voter registry not set for this election'
       });
     }
+
+    // Get voter credentials and generate Merkle proof
+    const voterData = zkpService.getVoterData(electionId.toString(), credential);
+    if (!voterData) {
+      return res.status(400).json({
+        error: 'Voter not registered for this election'
+      });
+    }
+
+    // Remove the '0x' prefix from merkleRoot for comparison
+    const merkleRootStr = merkleRoot.startsWith('0x') ? merkleRoot.slice(2) : merkleRoot;
 
     // Generate ZK Proof
     let zkProof;
@@ -61,8 +72,8 @@ router.post('/submit', async (req, res) => {
         credential,
         secret,
         electionId: electionId.toString(),
-        merkleProof: merkleProof || [],
-        merkleRoot,
+        merkleProof: voterData.merkleProof,
+        merkleRoot: merkleRootStr,
         validCandidates
       });
     } catch (error) {

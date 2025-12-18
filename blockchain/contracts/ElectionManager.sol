@@ -4,6 +4,14 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
+ * @title IVoteCommitment
+ * @dev Interface for VoteCommitment contract
+ */
+interface IVoteCommitment {
+    function setVoterRegistry(uint256 electionId, bytes32 merkleRoot) external;
+}
+
+/**
  * @title ElectionManager
  * @dev Manages the creation and lifecycle of elections
  * @notice This contract handles election metadata and state transitions
@@ -29,6 +37,8 @@ contract ElectionManager is Ownable {
     mapping(uint256 => Election) public elections;
     mapping(uint256 => bool) public electionExists;
     
+    IVoteCommitment public voteCommitment;
+    
     event ElectionCreated(
         uint256 indexed electionId,
         string title,
@@ -48,8 +58,22 @@ contract ElectionManager is Ownable {
         string candidateName
     );
     
+    event VoterRegistrySet(
+        uint256 indexed electionId,
+        bytes32 merkleRoot
+    );
+    
     constructor() Ownable(msg.sender) {
         _electionCounter = 0;
+    }
+    
+    /**
+     * @dev Sets the VoteCommitment contract address
+     * @param _voteCommitment Address of the VoteCommitment contract
+     */
+    function setVoteCommitmentAddress(address _voteCommitment) external onlyOwner {
+        require(_voteCommitment != address(0), "Invalid address");
+        voteCommitment = IVoteCommitment(_voteCommitment);
     }
     
     /**
@@ -214,5 +238,21 @@ contract ElectionManager is Ownable {
     function getElectionStatus(uint256 electionId) external view returns (ElectionStatus) {
         require(electionExists[electionId], "Election does not exist");
         return elections[electionId].status;
+    }
+    
+    /**
+     * @dev Registers voters by setting Merkle root in VoteCommitment contract
+     * @param electionId The ID of the election
+     * @param merkleRoot Root hash of voter registry Merkle tree
+     */
+    function registerVoters(uint256 electionId, bytes32 merkleRoot) external onlyOwner {
+        require(electionExists[electionId], "Election does not exist");
+        require(address(voteCommitment) != address(0), "VoteCommitment not set");
+        require(merkleRoot != bytes32(0), "Invalid Merkle root");
+        
+        // Call VoteCommitment to set the voter registry
+        voteCommitment.setVoterRegistry(electionId, merkleRoot);
+        
+        emit VoterRegistrySet(electionId, merkleRoot);
     }
 }

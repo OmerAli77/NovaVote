@@ -12,6 +12,7 @@ class ZKPService {
     // Merkle tree for voter registry
     this.voterTrees = new Map(); // electionId => Merkle tree
     this.nullifiers = new Map(); // electionId => Set of used nullifiers
+    this.voterRegistry = new Map(); // electionId => Map(credential => voterData)
   }
 
   /**
@@ -334,7 +335,37 @@ class ZKPService {
       credentials: voterCredentials
     });
 
+    // Store voter registry for proof generation
+    if (!this.voterRegistry.has(electionId)) {
+      this.voterRegistry.set(electionId, new Map());
+    }
+    
+    const registry = this.voterRegistry.get(electionId);
+    voterCredentials.forEach((vc, index) => {
+      registry.set(vc.credential, {
+        voterId: vc.voterId,
+        leafHash: vc.leafHash,
+        leafIndex: index,
+        merkleProof: this.getMerkleProof(tree.tree, index)
+      });
+    });
+
     return tree.root;
+  }
+
+  /**
+   * Get voter data including Merkle proof
+   * 
+   * @param {string} electionId - Election ID
+   * @param {string} credential - Voter credential
+   * @returns {Object} Voter data with Merkle proof
+   */
+  getVoterData(electionId, credential) {
+    const registry = this.voterRegistry.get(electionId);
+    if (!registry) {
+      return null;
+    }
+    return registry.get(credential);
   }
 
   /**

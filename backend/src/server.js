@@ -52,6 +52,38 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Debug endpoint
+app.get('/api/debug/blockchain', async (req, res) => {
+  try {
+    const initialized = blockchainService.initialized;
+    let contractStatus = 'Not initialized';
+    
+    if (initialized) {
+      const provider = blockchainService.getProvider();
+      const network = await provider.getNetwork();
+      const electionManager = blockchainService.getContract('electionManager');
+      const code = await provider.getCode(electionManager.target);
+      
+      contractStatus = {
+        network: network.name,
+        chainId: network.chainId.toString(),
+        electionManagerAddress: electionManager.target,
+        contractDeployed: code !== '0x'
+      };
+    }
+    
+    res.json({
+      blockchainInitialized: initialized,
+      contractStatus
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err);
