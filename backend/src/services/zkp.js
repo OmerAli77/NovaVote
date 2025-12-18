@@ -1,4 +1,6 @@
 const CryptoJS = require('crypto-js');
+const fs = require('fs');
+const path = require('path');
 
 /**
  * Zero-Knowledge Proof Service
@@ -13,6 +15,60 @@ class ZKPService {
     this.voterTrees = new Map(); // electionId => Merkle tree
     this.nullifiers = new Map(); // electionId => Set of used nullifiers
     this.voterRegistry = new Map(); // electionId => Map(credential => voterData)
+    this.dataFile = path.join(__dirname, '..', '..', 'voter-registry.json');
+    
+    // Load persisted data
+    this.loadRegistry();
+  }
+
+  /**
+   * Load voter registry from disk
+   */
+  loadRegistry() {
+    try {
+      if (fs.existsSync(this.dataFile)) {
+        const data = JSON.parse(fs.readFileSync(this.dataFile, 'utf8'));
+        
+        // Restore voter trees
+        if (data.voterTrees) {
+          this.voterTrees = new Map(Object.entries(data.voterTrees));
+        }
+        
+        // Restore voter registry
+        if (data.voterRegistry) {
+          Object.entries(data.voterRegistry).forEach(([electionId, voters]) => {
+            const voterMap = new Map(Object.entries(voters));
+            this.voterRegistry.set(electionId, voterMap);
+          });
+        }
+        
+        console.log('✓ Voter registry loaded from disk');
+      }
+    } catch (error) {
+      console.error('Failed to load voter registry:', error.message);
+    }
+  }
+
+  /**
+   * Save voter registry to disk
+   */
+  saveRegistry() {
+    try {
+      const data = {
+        voterTrees: Object.fromEntries(this.voterTrees),
+        voterRegistry: {}
+      };
+      
+      // Convert voter registry Maps to objects
+      this.voterRegistry.forEach((voterMap, electionId) => {
+        data.voterRegistry[electionId] = Object.fromEntries(voterMap);
+      });
+      
+      fs.writeFileSync(this.dataFile, JSON.stringify(data, null, 2));
+      console.log('✓ Voter registry saved to disk');
+    } catch (error) {
+      console.error('Failed to save voter registry:', error.message);
+    }
   }
 
   /**
@@ -378,6 +434,9 @@ class ZKPService {
         merkleProof: this.getMerkleProof(tree.tree, index)
       });
     });
+
+    // Persist to disk
+    this.saveRegistry();
 
     return tree.root;
   }
