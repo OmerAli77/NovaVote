@@ -73,6 +73,9 @@ export const auditAPI = {
   
   getStats: (electionId) => 
     api.get(`/audit/${electionId}/stats`),
+  
+  getMerkleTree: (electionId) =>
+    api.get(`/audit/${electionId}/merkle`),
 };
 
 // Admin API

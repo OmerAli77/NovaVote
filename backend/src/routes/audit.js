@@ -94,6 +94,53 @@ router.get('/:electionId/verify', async (req, res) => {
 });
 
 /**
+ * Get Merkle tree data for an election
+ */
+router.get('/:electionId/merkle', async (req, res) => {
+  try {
+    const { electionId } = req.params;
+    const zkpService = require('../services/zkp');
+
+    // Get Merkle tree data
+    const voterTree = zkpService.voterTrees.get(electionId);
+    const voterRegistry = zkpService.voterRegistry.get(electionId);
+
+    if (!voterTree) {
+      return res.status(404).json({
+        error: 'Merkle tree not found',
+        message: 'No voters registered for this election yet'
+      });
+    }
+
+    // Get voter IDs from registry
+    const voters = [];
+    if (voterRegistry) {
+      voterRegistry.forEach((data, credential) => {
+        voters.push({
+          voterId: data.voterId,
+          leafHash: data.leafHash,
+          leafIndex: data.leafIndex
+        });
+      });
+    }
+
+    res.json({
+      root: voterTree.tree.root,
+      leaves: voterTree.tree.leaves,
+      layers: voterTree.tree.tree.length,
+      voterCount: voters.length,
+      voters: voters.sort((a, b) => a.leafIndex - b.leafIndex)
+    });
+  } catch (error) {
+    console.error('Get Merkle tree error:', error);
+    res.status(500).json({
+      error: 'Failed to get Merkle tree data',
+      details: error.message
+    });
+  }
+});
+
+/**
  * Get public statistics
  */
 router.get('/:electionId/stats', async (req, res) => {

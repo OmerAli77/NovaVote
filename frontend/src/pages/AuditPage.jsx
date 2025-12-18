@@ -31,19 +31,12 @@ export default function AuditPage() {
 
   const loadMerkleTreeData = async () => {
     try {
-      // Simulated Merkle tree data - in production, fetch from backend
-      setMerkleTreeData({
-        root: '0x3f1d78f305168f9a0d66ea6f9ca47df8cb79ff5d591a9dbf23e3e6f5f122592b',
-        leaves: [
-          '0xd949de198c17373e5a59480332add6d89d10022012487ab8694e1df1d7f61cc2',
-          '0x58cb5b62953c0420af2beca734dbef1a820106663ec9c845fe8f7d800d132f30',
-          '0x3aba99b2409c1830f20b53e2a1d75dc7c944dda4e86e0c29bc3f88f25f446c30'
-        ],
-        layers: 3,
-        voterCount: 3
-      })
+      const response = await auditAPI.getMerkleTree(electionId)
+      setMerkleTreeData(response.data)
     } catch (error) {
       console.error('Failed to load Merkle tree data:', error)
+      // Set null so component knows data is not available
+      setMerkleTreeData(null)
     }
   }
 
@@ -927,8 +920,10 @@ export default function AuditPage() {
         </div>
       </div>
       </>
-      ) : (
-        /* Architecture Tab */
+      )}
+
+      {/* ZKP SYSTEM TAB */}
+      {activeTab === 'zkp' && (
         <div className="space-y-6">
           {/* System Architecture */}
           <div className="card bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700">
@@ -1709,8 +1704,18 @@ export default function AuditPage() {
       )}
 
       {/* MERKLE TREE TAB */}
-      {activeTab === 'merkle' && merkleTreeData && (
+      {activeTab === 'merkle' && (
         <div className="space-y-6">
+          {!merkleTreeData ? (
+            <div className="card text-center py-12">
+              <svg className="w-16 h-16 mx-auto mb-4 text-gray-500 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              <h3 className="text-xl font-semibold text-gray-400 mb-2">No Voters Registered</h3>
+              <p className="text-gray-500 text-sm">The Merkle tree will appear here once voters are registered for this election.</p>
+            </div>
+          ) : (
+            <>
           {/* Merkle Tree Visualization */}
           <div className="card bg-gradient-to-br from-green-900/20 to-emerald-900/20 border-2 border-green-700/50">
             <h2 className="text-2xl font-bold text-green-200 mb-6 flex items-center">
@@ -1800,7 +1805,12 @@ export default function AuditPage() {
                           {leaf.slice(0, 12)}...
                         </code>
                       </div>
-                      <div className="mt-2 text-xs text-gray-400">Voter {index === 0 ? 'A' : index === 1 ? 'B' : 'C'}</div>
+                      <div className="mt-2 text-xs text-gray-400">
+                        {merkleTreeData.voters && merkleTreeData.voters[index] 
+                          ? merkleTreeData.voters[index].voterId 
+                          : `Voter ${String.fromCharCode(65 + index)}`
+                        }
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1868,25 +1878,35 @@ export default function AuditPage() {
 
             {/* Merkle Proof Example */}
             <div className="mt-6 bg-dark-800 rounded-lg p-6 border border-teal-500/30">
-              <h3 className="text-lg font-semibold text-teal-200 mb-4">Example: Voter B's Merkle Proof</h3>
+              <h3 className="text-lg font-semibold text-teal-200 mb-4">
+                Example: {merkleTreeData.voters && merkleTreeData.voters[1] ? merkleTreeData.voters[1].voterId : "Voter B"}'s Merkle Proof
+              </h3>
               
               <div className="bg-dark-900 rounded-lg p-6 font-mono text-xs space-y-4">
                 <div>
-                  <div className="text-gray-400 mb-2">Voter B's Leaf Hash (index 1):</div>
+                  <div className="text-gray-400 mb-2">
+                    {merkleTreeData.voters && merkleTreeData.voters[1] ? merkleTreeData.voters[1].voterId : "Voter B"}'s Leaf Hash (index 1):
+                  </div>
                   <code className="text-green-300 break-all">{merkleTreeData.leaves[1]}</code>
                 </div>
 
                 <div>
-                  <div className="text-gray-400 mb-2">Merkle Proof (2 elements):</div>
+                  <div className="text-gray-400 mb-2">Merkle Proof (approx {Math.ceil(Math.log2(merkleTreeData.leaves.length))} elements):</div>
                   <div className="space-y-2 pl-4">
                     <div>
                       <span className="text-teal-400">proof[0]:</span> 
-                      <code className="text-blue-300 ml-2 break-all">{merkleTreeData.leaves[0].slice(0, 40)}... (sibling: Voter A, position: left)</code>
+                      <code className="text-blue-300 ml-2 break-all">
+                        {merkleTreeData.leaves[0].slice(0, 40)}... (sibling: {merkleTreeData.voters && merkleTreeData.voters[0] ? merkleTreeData.voters[0].voterId : "Voter A"}, position: left)
+                      </code>
                     </div>
-                    <div>
-                      <span className="text-teal-400">proof[1]:</span>
-                      <code className="text-purple-300 ml-2 break-all">{merkleTreeData.leaves[2].slice(0, 40)}... (sibling: Parent2, position: right)</code>
-                    </div>
+                    {merkleTreeData.leaves.length > 2 && (
+                      <div>
+                        <span className="text-teal-400">proof[1]:</span>
+                        <code className="text-purple-300 ml-2 break-all">
+                          {merkleTreeData.leaves[2].slice(0, 40)}... (sibling: Parent2, position: right)
+                        </code>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1905,7 +1925,7 @@ export default function AuditPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span className="text-emerald-300 text-[11px]">
-                      Proof verified! Voter B is eligible to vote without revealing which voter they are.
+                      Proof verified! {merkleTreeData.voters && merkleTreeData.voters[1] ? merkleTreeData.voters[1].voterId : "Voter B"} is eligible to vote without revealing their identity.
                     </span>
                   </div>
                 </div>
@@ -1977,6 +1997,8 @@ export default function AuditPage() {
               </div>
             </div>
           </div>
+          </>
+          )}
         </div>
       )}
 
