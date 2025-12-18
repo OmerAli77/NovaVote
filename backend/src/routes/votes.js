@@ -207,26 +207,40 @@ router.post('/verify', async (req, res) => {
   try {
     await blockchainService.ensureInitialized();
 
-    const { electionId, credential } = req.body;
+    const { electionId, receiptHash } = req.body;
 
-    if (!electionId || !credential) {
+    if (!electionId || !receiptHash) {
       return res.status(400).json({
-        error: 'Election ID and credential are required'
+        error: 'Election ID and receipt hash are required'
       });
     }
 
-    const credentialHash = cryptoService.stringToBytes32(credential);
+    console.log('Verifying receipt:', {
+      electionId,
+      receiptHash: receiptHash.substring(0, 20) + '...'
+    });
+
     const voteCommitment = blockchainService.getContract('voteCommitment');
 
-    const result = await voteCommitment.verifyVoteCommitment(
+    // Call the contract's verifyReceipt function
+    const result = await voteCommitment.verifyReceipt(
       electionId,
-      credentialHash
+      receiptHash
     );
+
+    console.log('Verification result:', {
+      exists: result.exists,
+      hasEncryptedVote: result.encryptedVote !== '0x0000000000000000000000000000000000000000000000000000000000000000',
+      timestamp: result.timestamp.toString()
+    });
 
     res.json({
       verified: result.exists,
+      encryptedVote: result.encryptedVote,
+      nullifier: result.nullifier,
+      proofHash: result.proofHash,
       timestamp: result.exists ? new Date(Number(result.timestamp) * 1000).toISOString() : null,
-      message: result.exists ? 'Vote found on blockchain' : 'Vote not found'
+      message: result.exists ? 'Vote receipt verified on blockchain ✓' : 'Vote receipt not found'
     });
   } catch (error) {
     console.error('Verify vote error:', error);

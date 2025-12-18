@@ -50,8 +50,8 @@ export const votesAPI = {
   submit: (voteData) => 
     api.post('/votes/submit', voteData),
   
-  verify: (electionId, credential) => 
-    api.post('/votes/verify', { electionId, credential }),
+  verify: (electionId, receiptHash) => 
+    api.post('/votes/verify', { electionId, receiptHash }),
   
   getCount: (electionId) => 
     api.get(`/votes/${electionId}/count`),

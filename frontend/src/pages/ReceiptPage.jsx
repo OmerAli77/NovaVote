@@ -18,11 +18,23 @@ export default function ReceiptPage() {
     setVerifying(true)
     try {
       const electionId = new URLSearchParams(window.location.search).get('electionId') || '1'
-      const response = await votesAPI.verify(electionId, credential)
+      
+      if (!receiptHash) {
+        setVerificationResult({ 
+          verified: false, 
+          message: 'No receipt hash found. Please vote first.' 
+        })
+        return
+      }
+
+      const response = await votesAPI.verify(electionId, receiptHash)
       setVerificationResult(response.data)
     } catch (error) {
       console.error('Verification error:', error)
-      setVerificationResult({ verified: false, message: 'Verification failed' })
+      setVerificationResult({ 
+        verified: false, 
+        message: error.response?.data?.details || 'Verification failed' 
+      })
     } finally {
       setVerifying(false)
     }
