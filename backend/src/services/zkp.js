@@ -155,10 +155,17 @@ class ZKPService {
       
       const siblingIndex = isRightNode ? index - 1 : index + 1;
       
+      // If no sibling exists (odd number of nodes), use the node itself (it gets duplicated)
       if (siblingIndex < currentLevel.length) {
         proof.push({
           hash: currentLevel[siblingIndex],
           position: isRightNode ? 'left' : 'right'
+        });
+      } else {
+        // Node is duplicated when building parent
+        proof.push({
+          hash: currentLevel[index],
+          position: 'right' // Duplicate goes on the right
         });
       }
       
