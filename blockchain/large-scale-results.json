@@ -1,0 +1,43 @@
+{
+  "testDate": "2025-12-18T06:57:00.451Z",
+  "configuration": {
+    "totalVoters": 10000,
+    "expectedTurnout": 0.8,
+    "expectedVotes": 8000,
+    "batchSize": 100
+  },
+  "results": {
+    "votesProcessed": 8000,
+    "successfulBatches": 80,
+    "totalBatches": 80,
+    "totalTimeMs": 5785,
+    "totalTimeSec": 5.785,
+    "totalTimeMin": 0.09641666666666666,
+    "totalGas": 210472484,
+    "avgBatchTimeMs": "72.29",
+    "avgBatchGas": 2630906,
+    "avgTimePerVoteMs": "0.72",
+    "avgGasPerVote": 26309,
+    "tps": "1382.89",
+    "batchesPerSecond": "13.83"
+  },
+  "costs": {
+    "mainnet": {
+      "totalETH": "21.0472",
+      "totalUSD": "63141.75",
+      "perVoteUSD": "7.8927",
+      "perBatchUSD": "789.2718"
+    },
+    "layer2": {
+      "totalUSD": "631.42",
+      "perVoteUSD": "0.0789"
+    }
+  },
+  "recommendations": {
+    "productionReady": true,
+    "maxVotersSingleElection": "50,000+",
+    "recommendedDeployment": "Layer 2 (Polygon, Optimism, Arbitrum)",
+    "batchingRequired": true,
+    "estimatedCostPer10kVotes": "$789.27 (L2)"
+  }
+}
