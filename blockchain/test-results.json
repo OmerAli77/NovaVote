@@ -1,0 +1,145 @@
+{
+  "testDate": "2025-12-18T06:36:00.159Z",
+  "network": "localhost",
+  "summary": {
+    "totalElections": 3,
+    "totalVotersRegistered": 225,
+    "totalVotesCast": 180,
+    "successfulVotes": 180,
+    "failedVotes": 0,
+    "successRate": "100.00%",
+    "averageParticipationRate": "80.00%"
+  },
+  "deployment": {
+    "contracts": {
+      "VoteCommitment": {
+        "address": "0x22b1c5C2C9251622f7eFb76E356104E5aF0e996A",
+        "gasUsed": "625627",
+        "deployTime": "14ms"
+      },
+      "TallyManager": {
+        "address": "0xD855cE0C298537ad5b5b96060Cf90e663696bbf6",
+        "gasUsed": "686905",
+        "deployTime": "29ms"
+      },
+      "ElectionManager": {
+        "address": "0xF45B1CdbA9AACE2e9bbE80bf376CE816bb7E73FB",
+        "gasUsed": "1274168",
+        "deployTime": "18ms"
+      }
+    },
+    "totalDeploymentTime": "174ms"
+  },
+  "elections": [
+    {
+      "id": "1",
+      "name": "Presidential Election 2025",
+      "candidates": [
+        "Alice Johnson",
+        "Bob Smith",
+        "Carol Williams"
+      ],
+      "registeredVoters": 100,
+      "creationTime": "57ms",
+      "gasUsed": "299186",
+      "results": [
+        {
+          "candidate": "Alice Johnson",
+          "votes": 30,
+          "percentage": "37.50"
+        },
+        {
+          "candidate": "Bob Smith",
+          "votes": 26,
+          "percentage": "32.50"
+        },
+        {
+          "candidate": "Carol Williams",
+          "votes": 24,
+          "percentage": "30.00"
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Senate Election - District 5",
+      "candidates": [
+        "David Brown",
+        "Eve Davis"
+      ],
+      "registeredVoters": 75,
+      "creationTime": "48ms",
+      "gasUsed": "282134",
+      "results": [
+        {
+          "candidate": "David Brown",
+          "votes": 27,
+          "percentage": "45.00"
+        },
+        {
+          "candidate": "Eve Davis",
+          "votes": 33,
+          "percentage": "55.00"
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "name": "City Council - Ward 3",
+      "candidates": [
+        "Frank Miller",
+        "Grace Lee",
+        "Henry Taylor",
+        "Ivy Chen"
+      ],
+      "registeredVoters": 50,
+      "creationTime": "64ms",
+      "gasUsed": "281966",
+      "results": [
+        {
+          "candidate": "Frank Miller",
+          "votes": 11,
+          "percentage": "27.50"
+        },
+        {
+          "candidate": "Grace Lee",
+          "votes": 14,
+          "percentage": "35.00"
+        },
+        {
+          "candidate": "Henry Taylor",
+          "votes": 10,
+          "percentage": "25.00"
+        },
+        {
+          "candidate": "Ivy Chen",
+          "votes": 5,
+          "percentage": "12.50"
+        }
+      ]
+    }
+  ],
+  "performance": {
+    "voting": {
+      "totalTransactions": 180,
+      "totalGasUsed": "35054124",
+      "averageGasPerVote": "194745",
+      "averageTimePerVote": "9.64ms",
+      "transactionsPerSecond": "103.69"
+    },
+    "zkpVerification": {
+      "totalVerifications": 180,
+      "averageVerificationTime": "0.34ms"
+    },
+    "registration": {
+      "totalVoters": 225,
+      "totalTime": "95ms",
+      "averageTimePerVoter": "0.42ms"
+    }
+  },
+  "blockchainMetrics": {
+    "averageBlockTime": "~2-3 seconds (Hardhat local)",
+    "networkLatency": "<5ms (local)",
+    "confirmationTime": "Instant (development network)"
+  }
+}
