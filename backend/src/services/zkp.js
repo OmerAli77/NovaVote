@@ -121,6 +121,11 @@ class ZKPService {
    * @returns {boolean} True if proof is valid
    */
   verifyMerkleProof(leaf, proof, root) {
+    // If proof is empty and leaf equals root, this is valid (single voter case)
+    if (!proof || proof.length === 0) {
+      return leaf === root;
+    }
+
     let computedHash = leaf;
 
     for (const { hash, position } of proof) {
@@ -130,6 +135,13 @@ class ZKPService {
         computedHash = CryptoJS.SHA256(`${computedHash}${hash}`).toString();
       }
     }
+
+    console.log('Merkle verification:', {
+      leaf: leaf.substring(0, 16) + '...',
+      computedRoot: computedHash.substring(0, 16) + '...',
+      expectedRoot: root.substring(0, 16) + '...',
+      match: computedHash === root
+    });
 
     return computedHash === root;
   }
@@ -231,6 +243,15 @@ class ZKPService {
       throw new Error('Invalid candidate ID');
     }
 
+    console.log('Generating ZK proof:', {
+      candidateId,
+      credential: credential.substring(0, 16) + '...',
+      secret: secret.substring(0, 16) + '...',
+      electionId,
+      merkleRoot: merkleRoot.substring(0, 16) + '...',
+      proofLength: merkleProof ? merkleProof.length : 0
+    });
+
     // Generate nullifier
     const nullifier = this.generateNullifier(secret, electionId);
 
@@ -241,9 +262,17 @@ class ZKPService {
 
     // Verify Merkle proof (voter eligibility)
     const leafHash = CryptoJS.SHA256(`leaf-${credential}`).toString();
+    console.log('Verifying voter eligibility:', {
+      leafHash: leafHash.substring(0, 16) + '...',
+      merkleRoot: merkleRoot.substring(0, 16) + '...',
+      proofSteps: merkleProof ? merkleProof.length : 0
+    });
+
     if (!this.verifyMerkleProof(leafHash, merkleProof, merkleRoot)) {
       throw new Error('Invalid Merkle proof - voter not eligible');
     }
+
+    console.log('✓ Voter eligibility verified');
 
     // Encrypt vote
     const encryptedVote = this.encryptVote(candidateId, credential);

@@ -56,13 +56,30 @@ router.post('/submit', async (req, res) => {
     // Get voter credentials and generate Merkle proof
     const voterData = zkpService.getVoterData(electionId.toString(), credential);
     if (!voterData) {
+      console.error('Voter not found:', {
+        electionId,
+        credential: credential.substring(0, 16) + '...',
+        hasRegistry: zkpService.voterRegistry.has(electionId.toString())
+      });
       return res.status(400).json({
         error: 'Voter not registered for this election'
       });
     }
 
+    console.log('Voter found:', {
+      voterId: voterData.voterId,
+      leafIndex: voterData.leafIndex,
+      proofLength: voterData.merkleProof.length
+    });
+
     // Remove the '0x' prefix from merkleRoot for comparison
     const merkleRootStr = merkleRoot.startsWith('0x') ? merkleRoot.slice(2) : merkleRoot;
+
+    console.log('Starting ZK proof generation:', {
+      electionId,
+      candidateId,
+      merkleRootFromChain: merkleRootStr.substring(0, 16) + '...'
+    });
 
     // Generate ZK Proof
     let zkProof;
@@ -76,7 +93,9 @@ router.post('/submit', async (req, res) => {
         merkleRoot: merkleRootStr,
         validCandidates
       });
+      console.log('✓ ZK proof generated successfully');
     } catch (error) {
+      console.error('ZK proof generation error:', error.message);
       return res.status(400).json({
         error: 'ZK proof generation failed',
         details: error.message
@@ -84,11 +103,14 @@ router.post('/submit', async (req, res) => {
     }
 
     // Verify ZK Proof before submission
+    console.log('Verifying ZK proof...');
     if (!zkpService.verifyZKProof(zkProof.proof, zkProof.publicSignals)) {
+      console.error('ZK proof verification failed');
       return res.status(400).json({
         error: 'ZK proof verification failed'
       });
     }
+    console.log('✓ ZK proof verified');
 
     // Mark nullifier as used
     zkpService.markNullifierUsed(electionId.toString(), zkProof.nullifier);
