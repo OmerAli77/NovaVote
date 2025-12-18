@@ -1,0 +1,93 @@
+{
+  "voterTrees": {
+    "1": {
+      "tree": {
+        "root": "6ef9becbbccd804449aa353e7d4172a8a4b479a6f27354e3c1008bd8520357f7",
+        "tree": [
+          [
+            "06bed9a2881d9d7230879766b9d99391564fc6ad2eb262ab174a30b9f3c8f8b8",
+            "0e81b4d140e3b4251d652239957acbf148223ea9b4ffe87f92895cdca8e1bcea",
+            "347ea8b0db5519be57d9049dcfb2488093f5f8cc764fb471d89076efb861db6c"
+          ],
+          [
+            "25c23abcbf7c228eedd6a765d12bc0836df1f0a67685aabac0165516fbf3edcc",
+            "9e0ff8472de61c2a5f9dcad1d723ecdf95c083ee000483e5265eef02d1f65fb3"
+          ],
+          [
+            "6ef9becbbccd804449aa353e7d4172a8a4b479a6f27354e3c1008bd8520357f7"
+          ]
+        ],
+        "leaves": [
+          "06bed9a2881d9d7230879766b9d99391564fc6ad2eb262ab174a30b9f3c8f8b8",
+          "0e81b4d140e3b4251d652239957acbf148223ea9b4ffe87f92895cdca8e1bcea",
+          "347ea8b0db5519be57d9049dcfb2488093f5f8cc764fb471d89076efb861db6c"
+        ]
+      },
+      "credentials": [
+        {
+          "credential": "3b0c4ebc1669ef729a837f8163a43c0617799a96128b257719393ec6b587b263",
+          "secret": "390c369146e97ec7f50fbc45843c1aecc070db635001edbf24e933135072e174",
+          "leafHash": "06bed9a2881d9d7230879766b9d99391564fc6ad2eb262ab174a30b9f3c8f8b8",
+          "voterId": "V001"
+        },
+        {
+          "credential": "7e224068bff803b954309f4828307d9f3124fe335ad1e2e06116cbed0f63ea5d",
+          "secret": "02b6ba985a63ca1089c6a7ecab1a76dfb0697200c4e0274fb2a75c5a6eb08923",
+          "leafHash": "0e81b4d140e3b4251d652239957acbf148223ea9b4ffe87f92895cdca8e1bcea",
+          "voterId": "V002"
+        },
+        {
+          "credential": "adedc202f57ca11661ac0d1491bac613d025f1bc84d97237c8a2bd42ed019989",
+          "secret": "8aceef82fa4ea10a79f5ed230c1dcd38e658ed6ea85d25ebea5d9edf319e9de7",
+          "leafHash": "347ea8b0db5519be57d9049dcfb2488093f5f8cc764fb471d89076efb861db6c",
+          "voterId": "V003"
+        }
+      ]
+    }
+  },
+  "voterRegistry": {
+    "1": {
+      "3b0c4ebc1669ef729a837f8163a43c0617799a96128b257719393ec6b587b263": {
+        "voterId": "V001",
+        "leafHash": "06bed9a2881d9d7230879766b9d99391564fc6ad2eb262ab174a30b9f3c8f8b8",
+        "leafIndex": 0,
+        "merkleProof": [
+          {
+            "hash": "0e81b4d140e3b4251d652239957acbf148223ea9b4ffe87f92895cdca8e1bcea",
+            "position": "right"
+          },
+          {
+            "hash": "9e0ff8472de61c2a5f9dcad1d723ecdf95c083ee000483e5265eef02d1f65fb3",
+            "position": "right"
+          }
+        ]
+      },
+      "7e224068bff803b954309f4828307d9f3124fe335ad1e2e06116cbed0f63ea5d": {
+        "voterId": "V002",
+        "leafHash": "0e81b4d140e3b4251d652239957acbf148223ea9b4ffe87f92895cdca8e1bcea",
+        "leafIndex": 1,
+        "merkleProof": [
+          {
+            "hash": "06bed9a2881d9d7230879766b9d99391564fc6ad2eb262ab174a30b9f3c8f8b8",
+            "position": "left"
+          },
+          {
+            "hash": "9e0ff8472de61c2a5f9dcad1d723ecdf95c083ee000483e5265eef02d1f65fb3",
+            "position": "right"
+          }
+        ]
+      },
+      "adedc202f57ca11661ac0d1491bac613d025f1bc84d97237c8a2bd42ed019989": {
+        "voterId": "V003",
+        "leafHash": "347ea8b0db5519be57d9049dcfb2488093f5f8cc764fb471d89076efb861db6c",
+        "leafIndex": 2,
+        "merkleProof": [
+          {
+            "hash": "25c23abcbf7c228eedd6a765d12bc0836df1f0a67685aabac0165516fbf3edcc",
+            "position": "left"
+          }
+        ]
+      }
+    }
+  }
+}

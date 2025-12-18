@@ -120,16 +120,42 @@ router.post('/submit', async (req, res) => {
     const encryptedVoteBytes32 = '0x' + zkProof.encryptedVote;
     const proofHashBytes32 = '0x' + zkProof.proof.pi_a[0];
 
-    // Submit to blockchain
-    const tx = await voteCommitment.submitVoteCommitment(
+    console.log('Submitting to blockchain:', {
       electionId,
-      nullifierBytes32,
-      encryptedVoteBytes32,
-      proofHashBytes32,
-      merkleRoot
-    );
+      nullifier: nullifierBytes32.substring(0, 16) + '...',
+      encryptedVote: encryptedVoteBytes32.substring(0, 16) + '...',
+      proofHash: proofHashBytes32.substring(0, 16) + '...',
+      merkleRootSent: merkleRoot.substring(0, 16) + '...'
+    });
 
-    const receipt = await tx.wait();
+    // Submit to blockchain
+    let receipt;
+    try {
+      const tx = await voteCommitment.submitVoteCommitment(
+        electionId,
+        nullifierBytes32,
+        encryptedVoteBytes32,
+        proofHashBytes32,
+        merkleRoot
+      );
+
+      console.log('✓ Transaction sent:', tx.hash);
+      receipt = await tx.wait();
+      console.log('✓ Transaction confirmed in block:', receipt.blockNumber);
+    } catch (blockchainError) {
+      console.error('Blockchain transaction failed:', {
+        error: blockchainError.message,
+        reason: blockchainError.reason,
+        code: blockchainError.code,
+        data: blockchainError.data
+      });
+      
+      return res.status(400).json({
+        error: 'Blockchain verification failed',
+        details: blockchainError.reason || blockchainError.message,
+        hint: 'Check if Merkle root matches registered voters'
+      });
+    }
 
     // Get receipt hash from event
     const event = receipt.logs.find(log => {
