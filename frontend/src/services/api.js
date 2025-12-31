@@ -41,8 +41,8 @@ export const electionsAPI = {
   registerVoters: (electionId, voterIds) =>
     api.post(`/elections/${electionId}/register-voters`, { voterIds }),
   
-  getVoterProof: (electionId, credential) =>
-    api.post(`/elections/${electionId}/get-voter-proof`, { credential }),
+  getVoterProof: (electionId, voterSecret) =>
+    api.post(`/elections/${electionId}/get-voter-proof`, { voterSecret }),
 };
 
 // Votes API

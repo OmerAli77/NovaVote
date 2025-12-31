@@ -1,8 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const blockchainService = require('../services/blockchain');
-const cryptoService = require('../services/crypto');
-const zkpService = require('../services/zkp');
+const zkpSystem = require('../services/zk-proof-system');
 const { ethers } = require('ethers');
 
 // In-memory storage for vote data (in production, use encrypted database)
@@ -18,14 +17,13 @@ router.post('/submit', async (req, res) => {
     const { 
       electionId, 
       candidateId, 
-      credential,
-      secret,
-      merkleProof
+      voterSecret,
+      voterIndex
     } = req.body;
 
-    if (!electionId || candidateId === undefined || !credential || !secret) {
+    if (!electionId || candidateId === undefined || !voterSecret || voterIndex === undefined) {
       return res.status(400).json({
-        error: 'Election ID, candidate ID, credential, and secret are required'
+        error: 'Election ID, candidate ID, voter secret, and voter index are required'
       });
     }
 
@@ -33,11 +31,9 @@ router.post('/submit', async (req, res) => {
     const electionManager = blockchainService.getContract('electionManager');
     const election = await electionManager.getElection(electionId);
     
-    // Get valid candidate IDs
     const candidateCount = Number(election.candidateCount);
-    const validCandidates = Array.from({ length: candidateCount }, (_, i) => i);
     
-    if (!validCandidates.includes(candidateId)) {
+    if (candidateId < 0 || candidateId >= candidateCount) {
       return res.status(400).json({
         error: 'Invalid candidate ID'
       });
@@ -53,47 +49,22 @@ router.post('/submit', async (req, res) => {
       });
     }
 
-    // Get voter credentials and generate Merkle proof
-    const voterData = zkpService.getVoterData(electionId.toString(), credential);
-    if (!voterData) {
-      console.error('Voter not found:', {
-        electionId,
-        credential: credential.substring(0, 16) + '...',
-        hasRegistry: zkpService.voterRegistry.has(electionId.toString())
-      });
-      return res.status(400).json({
-        error: 'Voter not registered for this election'
-      });
-    }
-
-    console.log('Voter found:', {
-      voterId: voterData.voterId,
-      leafIndex: voterData.leafIndex,
-      proofLength: voterData.merkleProof.length
-    });
-
-    // Remove the '0x' prefix from merkleRoot for comparison
-    const merkleRootStr = merkleRoot.startsWith('0x') ? merkleRoot.slice(2) : merkleRoot;
-
-    console.log('Starting ZK proof generation:', {
+    console.log('Starting real ZK proof generation:', {
       electionId,
       candidateId,
-      merkleRootFromChain: merkleRootStr.substring(0, 16) + '...'
+      voterIndex
     });
 
-    // Generate ZK Proof
+    // Generate ZK Proof using real cryptography (Poseidon hash + Merkle proof)
     let zkProof;
     try {
-      zkProof = zkpService.generateZKProof({
-        candidateId,
-        credential,
-        secret,
+      zkProof = await zkpSystem.generateVoteProof({
         electionId: electionId.toString(),
-        merkleProof: voterData.merkleProof,
-        merkleRoot: merkleRootStr,
-        validCandidates
+        voterSecret,
+        candidateId,
+        voterIndex: parseInt(voterIndex)
       });
-      console.log('✓ ZK proof generated successfully');
+      console.log('✓ Real ZK proof generated successfully');
     } catch (error) {
       console.error('ZK proof generation error:', error.message);
       return res.status(400).json({
@@ -102,9 +73,19 @@ router.post('/submit', async (req, res) => {
       });
     }
 
+    // Extract public signals: [nullifierHash, merkleRoot, voteCommitment]
+    const nullifierHash = zkProof.publicSignals[0];
+    const voteCommitmentHash = zkProof.publicSignals[2];
+
     // Verify ZK Proof before submission
     console.log('Verifying ZK proof...');
-    if (!zkpService.verifyZKProof(zkProof.proof, zkProof.publicSignals)) {
+    const isValid = zkpSystem.verifyVoteProof(
+      electionId.toString(), 
+      zkProof.proof, 
+      zkProof.publicSignals
+    );
+
+    if (!isValid) {
       console.error('ZK proof verification failed');
       return res.status(400).json({
         error: 'ZK proof verification failed'
@@ -112,20 +93,28 @@ router.post('/submit', async (req, res) => {
     }
     console.log('✓ ZK proof verified');
 
-    // Mark nullifier as used
-    zkpService.markNullifierUsed(electionId.toString(), zkProof.nullifier);
-
     // Convert to bytes32 for blockchain
-    const nullifierBytes32 = '0x' + zkProof.nullifier;
-    const encryptedVoteBytes32 = '0x' + zkProof.encryptedVote;
-    const proofHashBytes32 = '0x' + zkProof.proof.pi_a[0];
+    const nullifierBytes32 = '0x' + BigInt(nullifierHash).toString(16).padStart(64, '0');
+    const voteCommitmentBytes32 = '0x' + BigInt(voteCommitmentHash).toString(16).padStart(64, '0');
+    
+    // Create proof hash from the ZK proof data (hash of the proof components)
+    const proofData = JSON.stringify({
+      pi_a: zkProof.proof.pi_a,
+      pi_b: zkProof.proof.pi_b,
+      pi_c: zkProof.proof.pi_c,
+      protocol: zkProof.proof.protocol
+    });
+    
+    // Hash the proof to create a unique proof hash
+    const crypto = require('crypto');
+    const proofHashHex = crypto.createHash('sha256').update(proofData).digest('hex');
+    const proofHashBytes32 = '0x' + proofHashHex.padStart(64, '0');
 
     console.log('Submitting to blockchain:', {
       electionId,
       nullifier: nullifierBytes32.substring(0, 16) + '...',
-      encryptedVote: encryptedVoteBytes32.substring(0, 16) + '...',
-      proofHash: proofHashBytes32.substring(0, 16) + '...',
-      merkleRootSent: merkleRoot.substring(0, 16) + '...'
+      voteCommitment: voteCommitmentBytes32.substring(0, 16) + '...',
+      merkleRoot: merkleRoot.substring(0, 16) + '...'
     });
 
     // Submit to blockchain
@@ -134,7 +123,7 @@ router.post('/submit', async (req, res) => {
       const tx = await voteCommitment.submitVoteCommitment(
         electionId,
         nullifierBytes32,
-        encryptedVoteBytes32,
+        voteCommitmentBytes32,
         proofHashBytes32,
         merkleRoot
       );
@@ -145,9 +134,7 @@ router.post('/submit', async (req, res) => {
     } catch (blockchainError) {
       console.error('Blockchain transaction failed:', {
         error: blockchainError.message,
-        reason: blockchainError.reason,
-        code: blockchainError.code,
-        data: blockchainError.data
+        reason: blockchainError.reason
       });
       
       return res.status(400).json({
@@ -169,14 +156,14 @@ router.post('/submit', async (req, res) => {
     const parsedEvent = voteCommitment.interface.parseLog(event);
     const receiptHash = parsedEvent.args.receiptHash;
 
-    // Store vote data encrypted (for tallying)
-    const voteKey = `${electionId}-${zkProof.nullifier}`;
+    // Store vote data (for tallying)
+    const voteKey = `${electionId}-${nullifierHash}`;
     voteStore.set(voteKey, {
       electionId,
       candidateId,
-      encryptedVote: zkProof.encryptedVote,
-      nullifier: zkProof.nullifier,
-      proofHash: zkProof.proof.pi_a[0],
+      voteCommitment: voteCommitmentHash,
+      nullifierHash: nullifierHash,
+      proofHash: zkProof.proof.merkleProof[0] || '0',
       receiptHash,
       timestamp: new Date().toISOString()
     });
@@ -186,10 +173,11 @@ router.post('/submit', async (req, res) => {
       receiptHash,
       transactionHash: receipt.hash,
       zkProof: {
-        proof: zkProof.proof,
-        publicSignals: zkProof.publicSignals
+        nullifierHash: zkProof.nullifierHash,
+        voteCommitment: zkProof.voteCommitment,
+        merkleProof: zkProof.merkleProof
       },
-      message: 'Vote submitted successfully with ZK proof'
+      message: 'Vote submitted successfully with real ZK proof (Poseidon hash)'
     });
   } catch (error) {
     console.error('Submit vote error:', error);

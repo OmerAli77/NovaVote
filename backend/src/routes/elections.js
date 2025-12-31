@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const blockchainService = require('../services/blockchain');
-const zkpService = require('../services/zkp');
+const zkpSystem = require('../services/zk-proof-system');
 const { ethers } = require('ethers');
 const { isLocalhost, checkAdminAccess } = require('../middleware/adminAccess');
 
@@ -16,7 +16,15 @@ router.post('/create', isLocalhost, async (req, res) => {
 
     if (!title || !startTime || !endTime || !candidates || candidates.length === 0) {
       return res.status(400).json({
-        error: 'Title, start time, end time, and candidates are required'
+        error: 'Missing required fields',
+        details: 'Title, start time, end time, and at least one candidate are required'
+      });
+    }
+
+    if (candidates.length < 2) {
+      return res.status(400).json({
+        error: 'Not enough candidates',
+        details: 'At least 2 candidates are required for an election'
       });
     }
 
@@ -58,9 +66,26 @@ router.post('/create', isLocalhost, async (req, res) => {
     });
   } catch (error) {
     console.error('Create election error:', error);
+    
+    let errorMessage = 'Failed to create election';
+    let errorDetails = error.message;
+    
+    // Provide specific error messages
+    if (error.message.includes('network')) {
+      errorMessage = 'Blockchain connection error';
+      errorDetails = 'Make sure the Hardhat node is running';
+    } else if (error.message.includes('contract')) {
+      errorMessage = 'Smart contract error';
+      errorDetails = 'Contracts may not be deployed. Run deployment script.';
+    } else if (error.code === 'CALL_EXCEPTION') {
+      errorMessage = 'Transaction failed';
+      errorDetails = error.reason || 'Smart contract rejected the transaction';
+    }
+    
     res.status(500).json({
-      error: 'Failed to create election',
-      details: error.message
+      error: errorMessage,
+      details: errorDetails,
+      hint: 'Check that blockchain node is running and contracts are deployed'
     });
   }
 });
@@ -202,7 +227,7 @@ router.post('/:electionId/end', isLocalhost, async (req, res) => {
 
 /**
  * Register voters for an election (ADMIN ONLY - localhost access required)
- * Creates Merkle tree of eligible voters
+ * Creates Merkle tree of eligible voters using Poseidon hash
  */
 router.post('/:electionId/register-voters', isLocalhost, async (req, res) => {
   try {
@@ -217,38 +242,50 @@ router.post('/:electionId/register-voters', isLocalhost, async (req, res) => {
       });
     }
 
-    // Generate credentials for all voters
-    const voterCredentials = voterIds.map(voterId => 
-      zkpService.generateVoterCredential(voterId, electionId)
-    );
+    // Check if voters are already registered on blockchain
+    const electionManager = blockchainService.getContract('electionManager');
+    const voteCommitment = blockchainService.getContract('voteCommitment');
+    
+    try {
+      const existingRoot = await voteCommitment.voterRegistryRoots(electionId);
+      if (existingRoot !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
+        return res.status(400).json({
+          error: 'Voters already registered for this election',
+          message: 'Cannot re-register voters. Voter registry is immutable once set.',
+          merkleRoot: existingRoot
+        });
+      }
+    } catch (error) {
+      console.error('Error checking existing registry:', error);
+    }
 
-    // Build Merkle tree (but don't save yet)
-    const merkleRoot = zkpService.buildMerkleTreeOnly(electionId, voterCredentials);
+    // Register voters using real ZKP system (Poseidon hash + Merkle tree)
+    const result = await zkpSystem.registerVoters(electionId, voterIds);
 
     // Set voter registry on blockchain via ElectionManager
-    const electionManager = blockchainService.getContract('electionManager');
-    const merkleRootBytes32 = '0x' + merkleRoot;
     
-    const tx = await electionManager.registerVoters(electionId, merkleRootBytes32);
+    // Convert Merkle root from decimal to bytes32 hex format
+    const merkleRootBigInt = BigInt(result.merkleRoot);
+    const merkleRootHex = '0x' + merkleRootBigInt.toString(16).padStart(64, '0');
+    
+    const tx = await electionManager.registerVoters(electionId, merkleRootHex);
     const receipt = await tx.wait();
 
-    // Only save to disk AFTER blockchain success
-    zkpService.saveVoterRegistry(electionId, voterCredentials, merkleRoot);
-
-    // Return credentials to voters (in production, send securely via email/secure channel)
-    const voterData = voterCredentials.map(vc => ({
-      voterId: vc.voterId,
-      credential: vc.credential,
-      secret: vc.secret  // ⚠️ CRITICAL: In production, send this privately to each voter
+    // Return voter secrets (in production, send securely via email/secure channel)
+    const voterData = result.voters.map((voter, idx) => ({
+      voterId: voter.voterId,
+      voterSecret: voter.secret,  // ⚠️ CRITICAL: In production, send this privately to each voter
+      commitment: voter.commitment,
+      voterIndex: idx
     }));
 
     res.json({
       success: true,
-      merkleRoot,
+      merkleRoot: result.merkleRoot,
       transactionHash: receipt.hash,
       votersRegistered: voterIds.length,
-      voterCredentials: voterData,  // ⚠️ In production, distribute these securely!
-      message: 'Voters registered successfully with ZK credentials'
+      voterData: voterData,  // ⚠️ In production, distribute these securely!
+      message: `Successfully registered ${voterIds.length} voters with Poseidon Merkle tree`
     });
   } catch (error) {
     console.error('Register voters error:', error);
@@ -267,21 +304,42 @@ router.post('/:electionId/get-voter-proof', async (req, res) => {
     await blockchainService.ensureInitialized();
 
     const { electionId } = req.params;
-    const { credential } = req.body;
+    const { voterSecret } = req.body;
 
-    if (!credential) {
+    if (!voterSecret) {
       return res.status(400).json({
-        error: 'Credential is required'
+        error: 'Voter secret is required'
       });
     }
 
-    // Get Merkle proof for voter
-    const merkleProof = zkpService.getVoterMerkleProof(electionId, credential);
-    const merkleRoot = zkpService.getMerkleRoot(electionId);
+    // Get Merkle tree data for this election
+    const voters = zkpSystem.voterRegistries.get(electionId.toString());
+    const merkleTree = zkpSystem.merkleTrees.get(electionId.toString());
+    
+    if (!voters || !merkleTree) {
+      return res.status(400).json({
+        error: 'Voter not registered for this election'
+      });
+    }
+
+    // Find voter by secret
+    const voterIndex = voters.findIndex(v => v.secret === voterSecret);
+
+    if (voterIndex === -1) {
+      return res.status(400).json({
+        error: 'Invalid voter secret'
+      });
+    }
+
+    // Get Merkle proof
+    const merkleProof = zkpSystem.getMerkleProof(merkleTree, voterIndex);
+    const voter = voters[voterIndex];
 
     res.json({
       merkleProof,
-      merkleRoot
+      merkleRoot: merkleTree.root,
+      voterIndex: voterIndex,
+      commitment: voter.commitment
     });
   } catch (error) {
     console.error('Get voter proof error:', error);

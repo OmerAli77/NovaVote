@@ -4,8 +4,9 @@ import { authAPI } from '../services/api'
 
 export default function LoginPage() {
   const [voterId, setVoterId] = useState('')
-  const [credential, setCredential] = useState('')
-  const [secret, setSecret] = useState('')
+  const [commitment, setCommitment] = useState('')
+  const [voterSecret, setVoterSecret] = useState('')
+  const [voterIndex, setVoterIndex] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
@@ -18,7 +19,7 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      if (!voterId || !electionId || !credential || !secret) {
+      if (!voterId || !electionId || !commitment || !voterSecret || !voterIndex) {
         setError('All fields are required')
         setLoading(false)
         return
@@ -26,8 +27,9 @@ export default function LoginPage() {
 
       // Store credentials in localStorage for voting
       localStorage.setItem('voterId', voterId)
-      localStorage.setItem('credential', credential)
-      localStorage.setItem('secret', secret)
+      localStorage.setItem('commitment', commitment)
+      localStorage.setItem('voterSecret', voterSecret)
+      localStorage.setItem('voterIndex', voterIndex)
       localStorage.setItem('electionId', electionId)
 
       // Navigate to voting page
@@ -51,7 +53,7 @@ export default function LoginPage() {
           </div>
           <h1 className="text-xl font-semibold text-[var(--text-primary)]">Voter Login</h1>
           <p className="text-sm text-[var(--text-muted)]">
-            Enter your voter ID and ZKP credentials to cast your vote
+            Enter your credentials from the JSON file to cast your vote
           </p>
         </div>
 
@@ -85,32 +87,47 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="label">Credential</label>
+            <label className="label">Commitment</label>
             <input
               type="text"
-              value={credential}
-              onChange={(e) => setCredential(e.target.value)}
-              placeholder="Enter your credential hash"
+              value={commitment}
+              onChange={(e) => setCommitment(e.target.value)}
+              placeholder="Enter your commitment (from JSON file)"
               className="input-field font-mono text-xs"
               required
             />
             <p className="text-xs text-[var(--text-muted)] mt-1.5">
-              64-character hex string provided by the admin
+              Poseidon hash commitment from your credentials file
             </p>
           </div>
 
           <div>
-            <label className="label">Secret</label>
+            <label className="label">Voter Secret</label>
             <input
               type="password"
-              value={secret}
-              onChange={(e) => setSecret(e.target.value)}
-              placeholder="Enter your secret key"
+              value={voterSecret}
+              onChange={(e) => setVoterSecret(e.target.value)}
+              placeholder="Enter your voterSecret (from JSON file)"
               className="input-field font-mono text-xs"
               required
             />
             <p className="text-xs text-[var(--text-muted)] mt-1.5">
-              64-character hex string (keep this private!)
+              Secret key from your credentials - NEVER share this!
+            </p>
+          </div>
+
+          <div>
+            <label className="label">Voter Index</label>
+            <input
+              type="number"
+              value={voterIndex}
+              onChange={(e) => setVoterIndex(e.target.value)}
+              placeholder="Enter your voterIndex (from JSON file)"
+              className="input-field"
+              required
+            />
+            <p className="text-xs text-[var(--text-muted)] mt-1.5">
+              Your position in the voter registry (0, 1, 2, etc.)
             </p>
           </div>
 
@@ -122,9 +139,9 @@ export default function LoginPage() {
               <div className="text-xs text-[var(--text-muted)]">
                 <p className="font-medium text-amber-400 mb-1.5">Important:</p>
                 <ul className="space-y-1 list-disc list-inside">
-                  <li>You must have received credentials from the election admin</li>
-                  <li>Your credential and secret are unique to this election</li>
-                  <li>Never share your secret with anyone</li>
+                  <li>Copy values from your voter-credentials JSON file</li>
+                  <li>You need: voterId, commitment, voterSecret, and voterIndex</li>
+                  <li>Never share your voterSecret with anyone</li>
                   <li>You can only vote once with these credentials</li>
                 </ul>
               </div>
@@ -133,7 +150,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading || !voterId || !credential || !secret}
+            disabled={loading || !voterId || !commitment || !voterSecret || !voterIndex}
             className="btn-primary w-full"
           >
             {loading ? (

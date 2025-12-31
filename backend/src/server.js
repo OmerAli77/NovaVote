@@ -35,6 +35,7 @@ const adminRoutes = require('./routes/admin');
 
 // Import blockchain service
 const blockchainService = require('./services/blockchain');
+const zkpSystem = require('./services/zk-proof-system');
 
 // Use routes
 app.use('/api/elections', electionRoutes);
@@ -117,11 +118,20 @@ app.listen(PORT, HOST, async () => {
   console.log('\n🔄 Initializing blockchain connection...');
   try {
     await blockchainService.initialize();
-    console.log('✅ Blockchain service ready\n');
+    console.log('✅ Blockchain service ready');
   } catch (error) {
     console.error('❌ Failed to initialize blockchain service:', error.message);
     console.error('⚠️  Server running but blockchain features unavailable');
-    console.error('💡 Make sure Hardhat node is running and contracts are deployed\n');
+    console.error('💡 Make sure Hardhat node is running and contracts are deployed');
+  }
+  
+  // Initialize ZKP system (Poseidon hash)
+  console.log('🔄 Initializing Zero-Knowledge Proof system...');
+  try {
+    await zkpSystem.init();
+    console.log('✅ ZKP system ready\n');
+  } catch (error) {
+    console.error('❌ Failed to initialize ZKP system:', error.message);
   }
 });
 

@@ -19,5 +19,8 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "circomlib": "^2.0.5"
   }
 }

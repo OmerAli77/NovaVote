@@ -30,7 +30,7 @@ export default function RegisterVotersTab({ elections }) {
       const response = await electionsAPI.registerVoters(selectedElection, voterIdList)
       
       setSuccess(`Successfully registered ${response.data.votersRegistered} voters with ZK credentials`)
-      setVoterCredentials(response.data.voterCredentials)
+      setVoterCredentials(response.data.voterData)
       setVoterIds('')
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to register voters')

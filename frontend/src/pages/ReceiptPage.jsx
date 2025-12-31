@@ -9,7 +9,7 @@ export default function ReceiptPage() {
 
   const receiptHash = localStorage.getItem('receiptHash')
   const transactionHash = localStorage.getItem('transactionHash')
-  const credential = localStorage.getItem('credential')
+  const commitment = localStorage.getItem('commitment')
   const voterId = localStorage.getItem('voterId')
   const zkProof = JSON.parse(localStorage.getItem('zkProof') || 'null')
   const votedCandidate = localStorage.getItem('votedCandidate')
@@ -140,16 +140,16 @@ export default function ReceiptPage() {
             </div>
 
             <div>
-              <label className="label">Credential Hash</label>
+              <label className="label">Commitment Hash</label>
               <div className="bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-lg p-3 font-mono text-xs break-all text-[var(--text-secondary)]">
-                {credential ? credential.substring(0, 40) + '...' : 'Not available'}
+                {commitment ? commitment.substring(0, 40) + '...' : 'Not available'}
               </div>
             </div>
           </div>
 
           <button
             onClick={handleVerify}
-            disabled={verifying || !credential}
+            disabled={verifying || !commitment}
             className="btn-primary w-full"
           >
             {verifying ? (

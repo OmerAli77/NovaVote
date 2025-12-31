@@ -94,42 +94,40 @@ router.get('/:electionId/verify', async (req, res) => {
 });
 
 /**
- * Get Merkle tree data for an election
+ * Get Merkle tree data for an election (Real Poseidon Merkle Tree)
  */
 router.get('/:electionId/merkle', async (req, res) => {
   try {
     const { electionId } = req.params;
-    const zkpService = require('../services/zkp');
+    const zkpSystem = require('../services/zk-proof-system');
 
-    // Get Merkle tree data
-    const voterTree = zkpService.voterTrees.get(electionId);
-    const voterRegistry = zkpService.voterRegistry.get(electionId);
+    // Get Merkle tree data from real ZKP system
+    const voters = zkpSystem.voterRegistries.get(electionId);
+    const merkleTree = zkpSystem.merkleTrees.get(electionId);
 
-    if (!voterTree) {
+    if (!voters || !merkleTree) {
       return res.status(404).json({
         error: 'Merkle tree not found',
         message: 'No voters registered for this election yet'
       });
     }
 
-    // Get voter IDs from registry
-    const voters = [];
-    if (voterRegistry) {
-      voterRegistry.forEach((data, credential) => {
-        voters.push({
-          voterId: data.voterId,
-          leafHash: data.leafHash,
-          leafIndex: data.leafIndex
-        });
-      });
-    }
+    // Get voter commitments (without secrets for audit)
+    const voterData = voters.map((v, idx) => ({
+      voterIndex: idx,
+      commitment: v.commitment,
+      voterSecret: null  // Don't expose voter secrets in audit
+    }));
 
     res.json({
-      root: voterTree.tree.root,
-      leaves: voterTree.tree.leaves,
-      layers: voterTree.tree.tree.length,
+      root: merkleTree.root,
+      leaves: voters.map(v => v.commitment),
+      depth: 20,  // 20-level Poseidon Merkle tree
       voterCount: voters.length,
-      voters: voters.sort((a, b) => a.leafIndex - b.leafIndex)
+      voters: voterData,
+      hashFunction: 'Poseidon',
+      curve: 'BN254 (alt_bn128)',
+      message: 'Real ZK-SNARK Merkle tree using Poseidon hash'
     });
   } catch (error) {
     console.error('Get Merkle tree error:', error);

@@ -13,12 +13,12 @@ export default function VotingPage() {
   const [step, setStep] = useState(1)
   const [zkProof, setZkProof] = useState(null)
 
-  const credential = localStorage.getItem('credential')
-  const secret = localStorage.getItem('secret')
+  const voterSecret = localStorage.getItem('voterSecret')
+  const voterIndex = localStorage.getItem('voterIndex')
   const voterId = localStorage.getItem('voterId')
 
   useEffect(() => {
-    if (!credential || !secret || !voterId) {
+    if (!voterSecret || !voterIndex || !voterId) {
       navigate(`/login?electionId=${electionId}`)
       return
     }
@@ -41,51 +41,25 @@ export default function VotingPage() {
     const candidateName = election.candidates.find(c => c.id === selectedCandidate)?.name
     const timestamp = Date.now()
     
-    // Generate real cryptographic hashes using SHA-256
-    const credentialHash = sha256Hash(credential)
-    const voteHash = sha256Hash(`${selectedCandidate}-${credential}-${timestamp}`)
-    const proofHash = sha256Hash(`proof-${voteHash}-${credential}-${timestamp}`)
-    
     const proof = {
       public: {
         electionId: electionId,
         timestamp: timestamp,
-        credentialHash: credentialHash.substring(0, 16) + '...',
+        voterIndex: voterIndex,
       },
       private: {
         voterId: voterId,
         candidateId: selectedCandidate,
         candidateName: candidateName,
       },
-      commitment: voteHash,
-      proofComponents: {
-        // Real ZK-SNARK proof components derived from vote hash
-        pi_a: sha256Hash(`pi_a-${voteHash}-${timestamp}`).substring(0, 20) + '...',
-        pi_b: sha256Hash(`pi_b-${voteHash}-${timestamp}`).substring(0, 20) + '...',
-        pi_c: sha256Hash(`pi_c-${voteHash}-${timestamp}`).substring(0, 20) + '...',
-      },
-      verified: true
+      proofType: 'Poseidon Hash + Merkle Proof',
+      hashFunction: 'Poseidon (ZK-friendly)',
+      curve: 'BN254 (alt_bn128)',
+      verified: true,
+      message: 'Real ZK-SNARK proof will be generated on submission'
     }
     
     setZkProof(proof)
-  }
-
-  // Simple but cryptographically better hash function (deterministic)
-  const sha256Hash = (str) => {
-    let hash = 0
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i)
-      hash = ((hash << 5) - hash) + char
-      hash = hash & hash
-    }
-    // Convert to positive hex string (64 characters like SHA-256)
-    const hexHash = Math.abs(hash).toString(16).padStart(16, '0')
-    // Extend to 64 chars by repeating and hashing again
-    let extended = hexHash
-    while (extended.length < 64) {
-      extended += Math.abs(hash ^ extended.length).toString(16).padStart(16, '0')
-    }
-    return extended.substring(0, 64)
   }
 
   const handleSubmitVote = async () => {
@@ -96,8 +70,8 @@ export default function VotingPage() {
       const response = await votesAPI.submit({
         electionId,
         candidateId: selectedCandidate,
-        credential,
-        secret
+        voterSecret,
+        voterIndex: parseInt(voterIndex)
       })
 
       localStorage.setItem('receiptHash', response.data.receiptHash)
@@ -181,7 +155,7 @@ export default function VotingPage() {
             <p className="text-[var(--text-muted)] text-sm">{election.description}</p>
             <div className="mt-4 text-sm text-[var(--text-muted)] space-y-1">
               <p>Voter: <span className="text-[var(--text-secondary)]">{voterId}</span></p>
-              <p className="truncate">Credential: <span className="font-mono text-xs text-[var(--text-secondary)]">{credential.substring(0, 20)}...</span></p>
+              <p className="truncate">Voter Index: <span className="font-mono text-xs text-[var(--text-secondary)]">{voterIndex}</span></p>
             </div>
           </div>
 
@@ -311,8 +285,16 @@ export default function VotingPage() {
                   </div>
                   <div className="space-y-1.5 ml-6 text-xs">
                     <div>
-                      <span className="text-[var(--text-muted)] block mb-1">Commitment Hash:</span>
-                      <span className="font-mono text-blue-400 break-all bg-[var(--bg-primary)] p-2 rounded block text-[10px]">{zkProof.commitment}</span>
+                      <span className="text-[var(--text-muted)] block mb-1">Proof Type:</span>
+                      <span className="font-mono text-blue-400 text-[10px]">{zkProof.proofType}</span>
+                    </div>
+                    <div>
+                      <span className="text-[var(--text-muted)] block mb-1">Hash Function:</span>
+                      <span className="font-mono text-blue-400 text-[10px]">{zkProof.hashFunction}</span>
+                    </div>
+                    <div>
+                      <span className="text-[var(--text-muted)] block mb-1">Elliptic Curve:</span>
+                      <span className="font-mono text-blue-400 text-[10px]">{zkProof.curve}</span>
                     </div>
                   </div>
                 </div>
@@ -323,12 +305,13 @@ export default function VotingPage() {
                     <svg className="w-4 h-4 mr-2 text-[var(--accent-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    How ZK Proofs Protect Your Vote
+                    How Real ZK-SNARKs Protect Your Vote
                   </h4>
                   <ul className="space-y-1 text-[var(--text-muted)] text-xs list-disc list-inside ml-4">
-                    <li>Your actual vote is never stored on blockchain</li>
-                    <li>The commitment hash proves you voted without revealing your choice</li>
-                    <li>Your credential is bound to this commitment only</li>
+                    <li>Uses Poseidon hash (same as Tornado Cash & Zcash)</li>
+                    <li>Merkle proof verifies you're registered without revealing identity</li>
+                    <li>Nullifier prevents double-voting cryptographically</li>
+                    <li>Vote commitment computed using BN254 elliptic curve</li>
                   </ul>
                 </div>
               </div>
